@@ -1,7 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.files.base import ContentFile
+from io import BytesIO
+import qrcode
 
-# Category SKAL defineres FØR Asset
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("Kategori"))
 
@@ -15,7 +17,7 @@ class Category(models.Model):
 class Asset(models.Model):
     VPID = models.CharField(max_length=100, verbose_name=_("VPID"))
     description = models.TextField(verbose_name=_("Beskrivelse"))
-    name = models.CharField(max_length=100, blank=True, verbose_name=_("Navn"))
+    name = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Navn"))  # ← Tilføjet default=""
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Kategori"))
     location = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Lokation"))
     title_en = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Titel (EN)"))
@@ -25,6 +27,7 @@ class Asset(models.Model):
     title_pl = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Titel (PL)"))
     description_pl = models.TextField(blank=True, default="", verbose_name=_("Beskrivelse (PL)"))
     image = models.ImageField(upload_to='assets/', blank=True, verbose_name=_("Billede"))
+    qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True, verbose_name=_("QR-kode"))  # ← Tilføjet null=True
 
     class Meta:
         verbose_name = _("Aktiv")
@@ -32,6 +35,22 @@ class Asset(models.Model):
 
     def __str__(self):
         return self.name or self.VPID
+
+    def save(self, *args, **kwargs):
+        if not self.qr_code:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(self.VPID)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            self.qr_code.save(f'qr_{self.VPID}.png', ContentFile(buffer.getvalue()), save=False)
+        super().save(*args, **kwargs)
 
 class Equipment(models.Model):
     Navn = models.CharField(max_length=100, verbose_name=_("Navn"))
