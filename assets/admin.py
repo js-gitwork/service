@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from django.urls import path
+from django.shortcuts import render
 from .models import Asset, Category, Equipment, FaultReport
 
-# Tilpas admin-sidens overskrifter til dansk
+# Admin-site konfiguration
 admin.site.site_header = _("VPRepair Administration")
 admin.site.site_title = _("VPRepair Admin")
 admin.site.index_title = _("Velkommen til administrationen")
@@ -11,23 +13,36 @@ admin.site.index_title = _("Velkommen til administrationen")
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
-    verbose_name = _("Kategori")
-    verbose_name_plural = _("Kategorier")
+    # Standard rediger/slet er aktiv (ingen ændringer nødvendige)
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('VPID', 'name', 'description', 'location')  # Sørg for, at 'name' og 'description' er med
+    list_display = ('VPID', 'name', 'description', 'print_qr_code')
     list_filter = ('category',)
     search_fields = ('VPID', 'name', 'description')
-    ordering = ('VPID',)
 
+    def print_qr_code(self, obj):
+        if obj.qr_code:
+            return f'<a href="/admin/assets/asset/{obj.id}/print_qr/" target="_blank">📷 Print QR</a>'
+        return "Ingen QR"
+    print_qr_code.short_description = _("Print QR-kode")
+    print_qr_code.allow_tags = True
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:asset_id>/print_qr/', self.print_qr_view, name='print_qr'),
+        ]
+        return custom_urls + urls
+
+    def print_qr_view(self, request, asset_id):
+        asset = Asset.objects.get(id=asset_id)
+        return render(request, 'admin/print_qr.html', {'asset': asset})
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ('Navn', 'Beskrivelse')  # Matcher din database
+    list_display = ('Navn', 'Beskrivelse')
     search_fields = ('Navn', 'Beskrivelse')
-    verbose_name = _("Udstyr")
-    verbose_name_plural = _("Udstyr")
 
 @admin.register(FaultReport)
 class FaultReportAdmin(admin.ModelAdmin):
@@ -39,7 +54,6 @@ class FaultReportAdmin(admin.ModelAdmin):
         'set_priority_high',
         'set_priority_normal',
         'set_priority_low',
-        'export_to_excel'
     ]
 
     def mark_as_resolved(self, request, queryset):
@@ -57,17 +71,3 @@ class FaultReportAdmin(admin.ModelAdmin):
     def set_priority_low(self, request, queryset):
         queryset.update(priority=3)
     set_priority_low.short_description = _("Sæt prioritet til Lav (vent til service)")
-
-    def export_to_excel(self, request, queryset):
-        # Din eksisterende Excel-eksport-funktion
-        pass
-    export_to_excel.short_description = _("Eksporter til Excel")
-
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('asset')
-
-    def asset_vpid(self, obj):
-        return obj.asset.VPID
-    asset_vpid.admin_order_field = 'asset__VPID'
-    asset_vpid.short_description = _("Maskine (VPID)")

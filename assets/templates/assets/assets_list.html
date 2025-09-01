@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rediger Aktiver</title>
+    <style>
+        .inactive { color: #999; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Aktiver</h1>
+    <table>
+        <tr>
+            <th>VPID</th>
+            <th>Navn</th>
+            <th>Kategori</th>
+            <th>Status</th>
+            <th>Handlinger</th>
+        </tr>
+        {% for asset in assets %}
+        <tr class="{% if not asset.is_active %}inactive{% endif %}">
+            <td>{{ asset.VPID }}</td>
+            <td>{{ asset.name }}</td>
+            <td>{{ asset.category }}</td>
+            <td>{% if asset.is_active %}Aktiv{% else %}Udgået{% endif %}</td>
+            <td><a href="{% url 'edit_asset' asset.pk %}">Rediger</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

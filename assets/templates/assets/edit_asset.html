@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rediger {{ asset.name }}</title>
+</head>
+<body>
+    <h1>Rediger {{ asset.name }}</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Gem ændringer</button>
+    </form>
+    <a href="{% url 'asset_list' %}">Tilbage til listen</a>
+</body>
+</html>

@@ -17,7 +17,7 @@ class Category(models.Model):
 class Asset(models.Model):
     VPID = models.CharField(max_length=100, verbose_name=_("VPID"))
     description = models.TextField(verbose_name=_("Beskrivelse"))
-    name = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Navn"))  # ← Tilføjet default=""
+    name = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Navn"))
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Kategori"))
     location = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Lokation"))
     title_en = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Titel (EN)"))
@@ -27,7 +27,8 @@ class Asset(models.Model):
     title_pl = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Titel (PL)"))
     description_pl = models.TextField(blank=True, default="", verbose_name=_("Beskrivelse (PL)"))
     image = models.ImageField(upload_to='assets/', blank=True, verbose_name=_("Billede"))
-    qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True, verbose_name=_("QR-kode"))  # ← Tilføjet null=True
+    qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True, verbose_name=_("QR-kode"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Aktiv"))  # ← NYT FELT: Markér som udgået
 
     class Meta:
         verbose_name = _("Aktiv")
