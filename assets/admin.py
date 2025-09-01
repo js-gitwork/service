@@ -16,10 +16,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('VPID', 'name', 'category', 'location')  # VPID er vigtigst
+    list_display = ('VPID', 'name', 'description', 'location')  # Sørg for, at 'name' og 'description' er med
     list_filter = ('category',)
-    search_fields = ('VPID', 'name', 'description', 'location')
+    search_fields = ('VPID', 'name', 'description')
     ordering = ('VPID',)
+
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
