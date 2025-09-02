@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from django.urls import path
+from django.utils.html import format_html
+from django.urls import reverse, path
 from django.shortcuts import render
 from .models import Asset, Category, Equipment, FaultReport
+from .qr_utils import qr_print_button, print_qr_view
 
 # Admin-site konfiguration
 admin.site.site_header = _("VPRepair Administration")
@@ -17,21 +19,27 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
-    list_display = ('VPID', 'name', 'description', 'print_qr_code')
+    list_display = ('VPID', 'name', 'description', 'qr_print_button', 'open_in_assets')
     list_filter = ('category',)
     search_fields = ('VPID', 'name', 'description')
 
-    def print_qr_code(self, obj):
-        if obj.qr_code:
-            return f'<a href="/admin/assets/asset/{obj.id}/print_qr/" target="_blank">📷 Print QR</a>'
-        return "Ingen QR"
-    print_qr_code.short_description = _("Print QR-kode")
-    print_qr_code.allow_tags = True
+    def qr_print_button(self, obj):
+        return qr_print_button(obj)
+    qr_print_button.short_description = _("Print QR-kode")
+    qr_print_button.allow_tags = True
+
+    def open_in_assets(self, obj):
+        return format_html(
+            '<a href="/assets/?focus={}" target="_blank" class="button">Redigér</a>',
+            obj.pk
+        )
+    open_in_assets.short_description = 'Redigér'
+    open_in_assets.allow_tags = True
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('<int:asset_id>/print_qr/', self.print_qr_view, name='print_qr'),
+            path('<int:asset_id>/print_qr/', print_qr_view, name='print_qr'),
         ]
         return custom_urls + urls
 

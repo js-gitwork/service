@@ -16,3 +16,9 @@ def edit_asset(request, pk):
     else:
         form = AssetForm(instance=asset)
     return render(request, 'assets/edit_asset.html', {'form': form, 'asset': asset})
+
+def asset_list(request):
+    assets = Asset.objects.all()
+    focus_id = request.GET.get('focus', None)
+    return render(request, 'assets/assets_list.html', {'assets': assets, 'focus_id': focus_id})
+
