@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-29 09:36+0200\n"
+"POT-Creation-Date: 2025-09-02 15:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,82 +17,249 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: .\assets\admin.py:6
-msgid "VPRepair Administration"
+
+#: .\assets\admin.py:25
+msgid "Print QR-kode"
 msgstr ""
 
-#: .\assets\admin.py:7
-msgid "VPRepair Admin"
+#: .\assets\admin.py:32 .\assets\admin.py:34
+msgid "Redigér"
 msgstr ""
 
-#: .\assets\admin.py:8
-msgid "Velkommen til administrationen"
+#: .\assets\admin.py:67 .\assets\models.py:114
+#: .\assets\templates\assets\mechanic_view.html:12
+msgid "Prioritet"
 msgstr ""
 
-#: .\assets\admin.py:14
+#: .\assets\models.py:10 .\assets\models.py:13 .\assets\models.py:27
 msgid "Kategori"
 msgstr ""
 
-#: .\assets\admin.py:15
+#: .\assets\models.py:14
 msgid "Kategorier"
 msgstr ""
 
-#: .\assets\admin.py:22
+#: .\assets\models.py:19 .\assets\models.py:101
+msgid "VPID"
+msgstr ""
+
+#: .\assets\models.py:20 .\assets\models.py:80
+msgid "Navn"
+msgstr ""
+
+#: .\assets\models.py:21 .\assets\models.py:81 .\assets\models.py:92
+#: .\assets\templates\assets\mechanic_view.html:13
+msgid "Beskrivelse"
+msgstr ""
+
+#: .\assets\models.py:29 .\assets\models.py:100
+msgid "Lokation"
+msgstr ""
+
+#: .\assets\models.py:30 .\assets\models.py:97
+msgid "Billede"
+msgstr ""
+
+#: .\assets\models.py:31 .\assets\models.py:96
+msgid "QR-kode"
+msgstr ""
+
+#: .\assets\models.py:32 .\assets\models.py:58 .\assets\models.py:103
 msgid "Aktiv"
 msgstr ""
 
-#: .\assets\admin.py:23
+#: .\assets\models.py:36
+msgid "Sidste synsdato"
+msgstr ""
+
+#: .\assets\models.py:39
+msgid "Dato for seneste syn"
+msgstr ""
+
+#: .\assets\models.py:42
+msgid "Sidste servicedato"
+msgstr ""
+
+#: .\assets\models.py:45
+msgid "Dato for seneste service"
+msgstr ""
+
+#: .\assets\models.py:49
+msgid "Udstyr på aktivet"
+msgstr ""
+
+#: .\assets\models.py:51
+msgid "Udstyr monteret på dette aktiv"
+msgstr ""
+
+#: .\assets\models.py:59
 msgid "Aktiver"
 msgstr ""
 
-#: .\assets\admin.py:29 .\assets\admin.py:30
+#: .\assets\models.py:84 .\assets\models.py:85
 msgid "Udstyr"
 msgstr ""
 
-#: .\assets\admin.py:43
-msgid "Marker som færdig"
+#: .\assets\models.py:91
+msgid "Titel"
 msgstr ""
 
-#: .\assets\admin.py:47
-msgid "Marker som 'Skal repareres nu'"
+#: .\assets\models.py:93
+msgid "Oprettet"
 msgstr ""
 
-#: .\assets\admin.py:49
-msgid "Service rapport"
+#: .\assets\models.py:94
+msgid "Opdateret"
 msgstr ""
 
-#: .\assets\admin.py:50
-msgid "Service rapporter"
+#: .\assets\models.py:95
+msgid "Status"
 msgstr ""
 
-#: .\assets\admin.py:63
-msgid "Marker som løst"
+#: .\assets\models.py:98
+msgid "Reparationsstatus"
 msgstr ""
 
-#: .\assets\admin.py:65 .\assets\templates\assets\index.html:7
+#: .\assets\models.py:99
+msgid "Maskine"
+msgstr ""
+
+#: .\assets\models.py:110
+msgid "Høj"
+msgstr ""
+
+#: .\assets\models.py:111
+msgid "Normal"
+msgstr ""
+
+#: .\assets\models.py:112
+msgid "Lav (vent til service)"
+msgstr ""
+
+#: .\assets\models.py:123
+msgid "Tildelt mekaniker"
+msgstr ""
+
+#: .\assets\models.py:129
+msgid "Arbejde påbegyndt"
+msgstr ""
+
+#: .\assets\models.py:134
+msgid "Afsluttet"
+msgstr ""
+
+#: .\assets\models.py:141
+msgid "Udført af"
+msgstr ""
+
+#: .\assets\models.py:146
+msgid "Noter (til mekaniker)"
+msgstr ""
+
+#: .\assets\models.py:150
+msgid "Godkendt"
+msgstr ""
+
+#: .\assets\models.py:154
 msgid "Fejlrapport"
 msgstr ""
 
-#: .\assets\admin.py:66
+#: .\assets\models.py:155
 msgid "Fejlrapporter"
 msgstr ""
 
-#: .\assets\templates\assets\index.html:79
-msgid "Indsend fejlrapport"
+#: .\assets\models.py:172
+msgid "Færdig"
 msgstr ""
 
-#: .\assets\templates\assets\index.html:94
-msgid "Aktiv (ID eller kaldenavn):"
+#: .\assets\models.py:174
+msgid "Igang"
 msgstr ""
 
-#: .\assets\templates\assets\index.html:99
-msgid "Beskriv fejlen:"
+#: .\assets\models.py:176
+msgid "Tildelt"
 msgstr ""
 
-#: .\assets\templates\assets\index.html:104
-msgid "Billede (valgfrit):"
+#: .\assets\models.py:178
+msgid "Ny"
 msgstr ""
 
-#: .\assets\templates\assets\index.html:108
+#: .\assets\templates\assets\mechanic_view.html:5
+msgid "Mine tildelte opgaver"
+msgstr ""
+
+#: .\assets\templates\assets\mechanic_view.html:15
+msgid "Billede af fejl"
+msgstr ""
+
+#: .\assets\templates\assets\mechanic_view.html:18
+msgid "Noter fra værkfører"
+msgstr ""
+
+#: .\assets\templates\assets\mechanic_view.html:26
+msgid "Start arbejde"
+msgstr ""
+
+#: .\assets\templates\assets\mechanic_view.html:34
+msgid "Afslut opgave"
+msgstr ""
+
+#: .\assets\templates\assets\mechanic_view.html:41
+msgid "Ingen tildelte opgaver."
+msgstr ""
+
+#: .\templates\index.html:7
+msgid "Service System"
+msgstr ""
+
+#: .\templates\index.html:26
+msgid "Flag: "
+msgstr ""
+
+#: .\templates\index.html:29
+msgid "Søg efter aktiv eller scan QR..."
+msgstr ""
+
+#: .\templates\index.html:30
+msgid "Scan QR-kode"
+msgstr ""
+
+#: .\templates\index.html:34 .\templates\index.html:99
+msgid "Indtast søgeord eller scan QR-kode..."
+msgstr ""
+
+#: .\templates\index.html:40
+msgid "Fejlbeskrivelse"
+msgstr ""
+
+#: .\templates\index.html:44
+msgid "Vælg billede"
+msgstr ""
+
+#: .\templates\index.html:45
 msgid "Indsend rapport"
+msgstr ""
+
+#: .\templates\index.html:50
+msgid "Preview"
+msgstr ""
+
+#: .\templates\index.html:73
+msgid "Kompressor 1"
+msgstr ""
+
+#: .\templates\index.html:74
+msgid "Pumpe 2"
+msgstr ""
+
+#: .\templates\index.html:75
+msgid "Motor 3"
+msgstr ""
+
+#: .\templates\index.html:95
+msgid "Ingen aktiver fundet"
+msgstr ""
+
+#: .\templates\index.html:134
+msgid "Rapport indsendt!"
 msgstr ""

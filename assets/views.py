@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -24,6 +24,11 @@ def save_image_from_base64(image_data, report):
         )
     except Exception as e:
         print(f"Kunne ikke gemme billede: {e}")
+
+# --- Forside ---
+def index(request):
+    """Vis index.html som forsiden."""
+    return render(request, 'index.html')
 
 # --- API: Hent liste af aktiver (JSON) ---
 @csrf_exempt
@@ -56,7 +61,7 @@ def submit_report(request):
         # Gem billedet (hvis der er et)
         if image_data:
             save_image_from_base64(image_data, report)
-            report.save()  # Gem igen for at sikre billedet bliver gemt
+            report.save()
 
         return JsonResponse({
             'status': 'success',
@@ -70,7 +75,7 @@ def submit_report(request):
 
 # --- Vis liste af aktiver (HTML) ---
 def asset_list(request):
-    """Vis liste af aktiver i browser (med fokuseret aktiv)."""
+    """Vis liste af aktiver i browser."""
     assets = Asset.objects.all().order_by('VPID')
     focus_id = request.GET.get('focus', None)
     return render(request, 'assets/assets_list.html', {
@@ -100,7 +105,7 @@ def mechanic_view(request):
     """Vis tildelte fejlrapporter til mekanikeren."""
     reports = FaultReport.objects.filter(
         assigned_to=request.user,
-        completed_at__isnull=True  # Kun ikke-afsluttede
+        completed_at__isnull=True
     ).order_by('-priority', 'created_at')
     return render(request, 'mechanic_reports.html', {'reports': reports})
 

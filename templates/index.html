@@ -1,0 +1,155 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Service System" %}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- Flag + kreditering -->
+    <div class="language-selector">
+        <a href="#" class="lang-link" data-lang="da">
+            <img src="/static/flag/dk.png" alt="Dansk" class="flag">
+        </a>
+        <a href="#" class="lang-link" data-lang="en">
+            <img src="/static/flag/uk.png" alt="English" class="flag">
+        </a>
+        <a href="#" class="lang-link" data-lang="pl">
+            <img src="/static/flag/pl.png" alt="Polski" class="flag">
+        </a>
+        <a href="#" class="lang-link" data-lang="de">
+            <img src="/static/flag/de.png" alt="Deutsch" class="flag">
+        </a>
+    </div>
+    <p class="credit-text">Flag: <a href="https://flagpedia.net" target="_blank">Flagpedia</a></p>
+
+    <!-- Søgefelt + Scan QR-knap -->
+    <input type="text" id="search" class="search-input" placeholder="Søg efter aktiv eller scan QR...">
+    <button id="scan-btn" class="btn btn-primary" data-i18n="scan-qr">Scan QR-kode</button>
+
+    <!-- Asset-liste -->
+    <div id="asset-list" class="asset-list hidden">
+        <div class="asset-item">Indtast søgeord eller scan QR-kode...</div>
+    </div>
+
+    <!-- Fejlrapport-formular -->
+    <form id="report-form" class="report-form">
+        <div class="form-group">
+            <label for="description">Fejlbeskrivelse:</label>
+            <textarea id="description" class="form-control" rows="4" required></textarea>
+        </div>
+        <div class="button-group">
+            <button type="button" id="camera-btn" class="btn btn-secondary" data-i18n="choose-image">Vælg billede</button>
+            <button type="submit" class="btn btn-primary" data-i18n="submit-report">Indsend rapport</button>
+        </div>
+    </form>
+
+    <!-- Billede-preview -->
+    <img id="preview" class="image-preview hidden" alt="Preview">
+
+    <!-- JavaScript med hardcodede oversættelser -->
+    <script>
+        // Oversættelser for knapperne
+        const translations = {
+            da: {
+                "scan-qr": "Scan QR-kode",
+                "choose-image": "Vælg billede",
+                "submit-report": "Indsend rapport",
+                "search-placeholder": "Søg efter aktiv eller scan QR...",
+                "asset-list-empty": "Indtast søgeord eller scan QR-kode..."
+            },
+            en: {
+                "scan-qr": "Scan QR code",
+                "choose-image": "Choose image",
+                "submit-report": "Submit report",
+                "search-placeholder": "Search for asset or scan QR...",
+                "asset-list-empty": "Enter search term or scan QR code..."
+            },
+            pl: {
+                "scan-qr": "Zeskanuj kod QR",
+                "choose-image": "Wybierz zdjęcie",
+                "submit-report": "Wyślij raport",
+                "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...",
+                "asset-list-empty": "Wpisz frazę wyszukiwania lub zeskanuj kod QR..."
+            },
+            de: {
+                "scan-qr": "QR-Code scannen",
+                "choose-image": "Bild auswählen",
+                "submit-report": "Bericht einreichen",
+                "search-placeholder": "Nach Asset suchen oder QR-Code scannen...",
+                "asset-list-empty": "Geben Sie Suchbegriff ein oder scannen Sie QR-Code..."
+            }
+        };
+
+        // Sæt standardsprog
+        let currentLang = 'da';
+
+        // Sprogskift (uden Django's i18n)
+        document.querySelectorAll('.lang-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentLang = this.dataset.lang;
+                updateTexts();
+            });
+        });
+
+        // Opdater tekster baseret på valgt sprog
+        function updateTexts() {
+            document.getElementById('scan-btn').textContent = translations[currentLang]["scan-qr"];
+            document.getElementById('camera-btn').textContent = translations[currentLang]["choose-image"];
+            document.querySelector('[data-i18n="submit-report"]').textContent = translations[currentLang]["submit-report"];
+            document.getElementById('search').placeholder = translations[currentLang]["search-placeholder"];
+            document.querySelector('.asset-item').textContent = translations[currentLang]["asset-list-empty"];
+        }
+
+        // Søgefunktion
+        document.getElementById('search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.trim();
+            const assetList = document.getElementById('asset-list');
+            if (searchTerm.length > 0) {
+                assetList.innerHTML = '<div class="asset-item">VP1001: Kompressor 1</div>';
+                assetList.classList.remove('hidden');
+            } else {
+                assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
+                assetList.classList.add('hidden');
+            }
+        });
+
+        // Scan QR (simuleret)
+        document.getElementById('scan-btn').addEventListener('click', function() {
+            document.getElementById('search').value = "VP1001";
+            document.getElementById('search').dispatchEvent(new Event('input'));
+        });
+
+        // Kamera
+        document.getElementById('camera-btn').addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('preview').src = event.target.result;
+                        document.getElementById('preview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+
+        // Indsend rapport
+        document.getElementById('report-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert(translations[currentLang]["submit-report"] + "!");
+            this.reset();
+            document.getElementById('preview').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
