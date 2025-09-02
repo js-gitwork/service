@@ -1,0 +1,71 @@
+/* Generel stil */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+/* Sprogvalg */
+.language-selector {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    background-color: #3f51b5;
+}
+
+/* Knapper */
+.scan-btn, .camera-btn, .submit-btn {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 90%;
+}
+
+/* Søgefelt */
+#search {
+    width: 90%;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Liste over aktiver */
+#asset-list {
+    height: 300px;
+    overflow-y: scroll;
+    background-color: white;
+    margin: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.asset-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Tekstfelt */
+#fejlbeskrivelse {
+    width: 90%;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    min-height: 100px;
+}
+
+/* Billede */
+#preview {
+    max-width: 100%;
+    margin: 10px auto;
+    display: block;
+}

@@ -25,9 +25,16 @@ th, td {
 }
 
 .button {
-    padding: 3px 8px;
-    background: #4CAF50;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
+    padding: 5px 10px;       /* Ens polstring */
+    background-color: #4CAF50; /* Ens baggrundsfarve */
+    color: white !important;  /* Ens tekstfarve */
+    border-radius: 4px;      /* Ens afrundede hjørner */
+    text-decoration: none;   /* Ingen understregning */
+    font-size: 13px;         /* Ens skriftstørrelse */
+    border: none;            /* Ingen kant */
+    cursor: pointer;         /* Musemarkør som "klikbar" */
+    display: inline-block;   /* Ens visning */
+    min-width: 80px;         /* Ens minimumsbredde */
+    text-align: center;      /* Centreret tekst */
+    margin: 0 2px;           /* Lidt margin mellem knapper */
 }

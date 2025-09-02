@@ -5,16 +5,12 @@ class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
         fields = [
-            'VPID', 'name', 'description',
-            'category', 'location',
-            'title_en', 'description_en',
-            'title_de', 'description_de',
-            'title_pl', 'description_pl',
-            'image', 'is_active'  # 'is_active' tilføjes senere
+            'VPID', 'name', 'description', 'category', 'location',
+            'image', 'qr_code', 'is_active', 'last_inspection_date',
+            'last_service_date', 'equipment'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'description_en': forms.Textarea(attrs={'rows': 3}),
-            'description_de': forms.Textarea(attrs={'rows': 3}),
-            'description_pl': forms.Textarea(attrs={'rows': 3}),
+            'last_inspection_date': forms.DateInput(attrs={'type': 'date'}),
+            'last_service_date': forms.DateInput(attrs={'type': 'date'}),
+            'equipment': forms.CheckboxSelectMultiple,  # Pæn visning af udstyr
         }

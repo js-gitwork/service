@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+<header>
+    <h1>{% trans "Mine tildelte opgaver" %}</h1>
+</header>
+
+<div class="report-list">
+    {% for report in reports %}
+    <div class="report-card" data-priority="{{ report.priority }}">
+        <h2>{{ report.title }} ({{ report.get_vpid }})</h2>
+        <p><strong>{% trans "Prioritet" %}:</strong> {{ report.get_priority_display }}</p>
+        <p><strong>{% trans "Beskrivelse" %}:</strong> {{ report.description }}</p>
+        {% if report.image %}
+            <img src="{{ report.image.url }}" alt="{% trans 'Billede af fejl' %}" class="report-image">
+        {% endif %}
+        {% if report.notes %}
+            <p><strong>{% trans "Noter fra værkfører" %}:</strong> {{ report.notes }}</p>
+        {% endif %}
+
+        <div class="report-actions">
+            {% if not report.started_at %}
+                <form method="post" action="{% url 'mark_started' report.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-start">
+                        {% trans "Start arbejde" %}
+                    </button>
+                </form>
+            {% endif %}
+            {% if report.started_at and not report.completed_at %}
+                <form method="post" action="{% url 'mark_completed' report.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-complete">
+                        {% trans "Afslut opgave" %}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p>{% trans "Ingen tildelte opgaver." %}</p>
+    {% endfor %}
+</div>

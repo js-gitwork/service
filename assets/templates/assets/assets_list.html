@@ -54,11 +54,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const focusId = urlParams.get('focus');
-            if (focusId) {
-                const row = document.querySelector(`tr[data-id="${focusId}"]`);
-                if (row) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    row.classList.add('highlight');
+           if (focusId) {  // ← Kun kør, hvis der er et ID
+            const row = document.querySelector(`tr[data-id="${focusId}"]`);
+            if (row) {  // ← Kun kør, hvis rækken findes
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.classList.add('highlight');
+                setTimeout(() => row.classList.remove('highlight'), 3000);
                 }
             }
         });
