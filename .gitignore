@@ -5,3 +5,4 @@ __pycache__/
 .envvenv_310/
 __pycache__/
 *.pyc
+venv_310/
