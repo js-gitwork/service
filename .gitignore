@@ -2,4 +2,6 @@ __pycache__/
 *.pyc
 *.swp
 .DS_Store
-.env
+.envvenv_310/
+__pycache__/
+*.pyc
