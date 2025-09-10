@@ -24,7 +24,7 @@ body {
 }
 
 .flag {
-    width: 30px;
+    width: 24px;                /* Mindsket til mobil */
     height: auto;
 }
 
@@ -40,93 +40,120 @@ body {
     text-decoration: none;
 }
 
-/* Søgefelt + Scan-knap */
+/* Søgefelt + Scan-knap (mobilvenlig) */
 .search-input {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
-    margin: 15px auto;
-    padding: 12px;
+    margin: 10px auto;
+    padding: 10px;
     display: block;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 16px;
 }
 
 #scan-btn {
     display: block;
-    width: 90%;
+    width: 95%;
     max-width: 500px;
-    margin: 10px auto;
-    padding: 12px;
+    margin: 5px auto 15px;
+    padding: 10px;
     background-color: var(--primary-color);
     color: var(--white);
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 16px;
 }
 
-/* Asset-liste */
-.asset-list {
-    width: 90%;
+/* Asset-liste (ALTID synlig, kompakt til mobil) */
+.asset-list-container {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
     max-width: 500px;
-    margin: 15px auto;
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: var(--white);
+    width: 95%;
+}
+
+.asset-description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    padding-left: 10px;
+    font-style: italic;
+}
+
+.asset-list {
+    width: 100%;
+    max-height: 150px;          /* Kompakt højde til mobil */
+    overflow-y: auto;           /* Scrollbar ved behov */
+    border: 1px solid #ddd;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    background: var(--white);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: block !important;  /* Altid synlig */
 }
 
 .asset-item {
-    padding: 10px;
+    padding: 8px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
+    font-size: 14px;            /* Mindre tekst */
+    white-space: nowrap;        /* Forhindr linjeskift */
+    overflow: hidden;           /* Skjul overflow */
+    text-overflow: ellipsis;    /* Prikker (...) hvis tekst er for lang */
 }
 
 .asset-item:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f5f5;
 }
 
 /* Fejlrapport-formular */
 .report-form {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
-    margin: 15px auto;
+    margin: 10px auto;
     background-color: var(--white);
-    padding: 15px;
+    padding: 12px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    font-size: 14px;
 }
 
 .form-control {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
     resize: vertical;
+    font-size: 14px;
 }
 
-/* Knap-gruppe (billede + indsend) */
+/* Knap-gruppe */
 .button-group {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .button-group .btn {
     flex: 1;
-    padding: 12px;
+    padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .btn-primary {
@@ -141,36 +168,34 @@ body {
 
 /* Billede-preview */
 .image-preview {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
-    margin: 15px auto;
+    margin: 10px auto;
     display: block;
     border-radius: 5px;
+    max-height: 200px;
+    object-fit: contain;
 }
 
+/* Skjulte elementer */
 .hidden {
     display: none !important;
 }
 
-/* Mobilvenlighed */
+/* Mobiloptimering */
 @media (max-width: 600px) {
-    .search-input, #scan-btn, .report-form, .image-preview {
-        width: 95%;
+    .asset-list {
+        max-height: 120px;      /* Endnu mindre på små skærme */
+        padding: 3px;
     }
-}
-
-.asset-list {
-    width: 90%;
-    max-width: 500px;
-    margin: 15px auto;
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: var(--white);
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: block; /* Ændret fra 'none' til 'block' */
-}
-
-.asset-list.hidden {
-    display: none;
+    .asset-item {
+        padding: 6px;
+        font-size: 13px;
+    }
+    .search-input, #scan-btn, .report-form, .image-preview {
+        width: 98%;
+    }
+    .flag {
+        width: 20px;
+    }
 }

@@ -6,6 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% trans "Service System" %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        /* Stil til beskrivelsen under hvert aktiv */
+        .asset-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            padding-left: 10px;
+            font-style: italic;
+            white-space: normal;
+        }
+
+        /* Highlight det valgte aktiv */
+        .asset-item.selected {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 8px;
+        }
+
+        /* Hover-effekt (for at vise, at elementet er klikbart) */
+        .asset-item:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <!-- Flag + kreditering -->
@@ -29,16 +53,18 @@
     <input type="text" id="search" class="search-input" placeholder="Søg efter aktiv eller scan QR...">
     <button id="scan-btn" class="btn btn-primary" data-i18n="scan-qr">Scan QR-kode</button>
 
-    <!-- Asset-liste -->
-    <div id="asset-list" class="asset-list hidden">
-        <div class="asset-item">Indtast søgeord eller scan QR-kode...</div>
+    <!-- Asset-liste (ALTID synlig) -->
+    <div id="asset-list-container" class="asset-list-container">
+        <div id="asset-list" class="asset-list">
+            <!-- Indhold indlæses dynamisk via JavaScript -->
+        </div>
     </div>
 
     <!-- Fejlrapport-formular -->
     <form id="report-form" class="report-form">
         <div class="form-group">
-            <label for="description">Fejlbeskrivelse:</label>
-            <textarea id="description" class="form-control" rows="4" required></textarea>
+            <label for="description">Fejlbeskrivelse for: <strong id="selected-asset-label">Ingen valgt</strong></label>
+            <textarea id="description" class="form-control" rows="3" required></textarea>
         </div>
         <div class="button-group">
             <button type="button" id="camera-btn" class="btn btn-secondary" data-i18n="choose-image">Vælg billede</button>
@@ -49,7 +75,6 @@
     <!-- Billede-preview -->
     <img id="preview" class="image-preview hidden" alt="Preview">
 
-    <!-- JavaScript med hardcodede oversættelser -->
     <script>
         // Oversættelser for knapperne
         const translations = {
@@ -58,35 +83,46 @@
                 "choose-image": "Vælg billede",
                 "submit-report": "Indsend rapport",
                 "search-placeholder": "Søg efter aktiv eller scan QR...",
-                "asset-list-empty": "Indtast søgeord eller scan QR-kode..."
+                "asset-list-empty": "Ingen aktiver fundet",
+                "report-submitted": "Rapport indsendt!",
+                "no-asset-selected": "Ingen aktiv valgt"
             },
             en: {
                 "scan-qr": "Scan QR code",
                 "choose-image": "Choose image",
                 "submit-report": "Submit report",
                 "search-placeholder": "Search for asset or scan QR...",
-                "asset-list-empty": "Enter search term or scan QR code..."
+                "asset-list-empty": "No assets found",
+                "report-submitted": "Report submitted!",
+                "no-asset-selected": "No asset selected"
             },
             pl: {
                 "scan-qr": "Zeskanuj kod QR",
                 "choose-image": "Wybierz zdjęcie",
                 "submit-report": "Wyślij raport",
                 "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...",
-                "asset-list-empty": "Wpisz frazę wyszukiwania lub zeskanuj kod QR..."
+                "asset-list-empty": "Nie znaleziono aktywów",
+                "report-submitted": "Raport wysłany!",
+                "no-asset-selected": "Nie wybrano aktywa"
             },
             de: {
                 "scan-qr": "QR-Code scannen",
                 "choose-image": "Bild auswählen",
                 "submit-report": "Bericht einreichen",
                 "search-placeholder": "Nach Asset suchen oder QR-Code scannen...",
-                "asset-list-empty": "Geben Sie Suchbegriff ein oder scannen Sie QR-Code..."
+                "asset-list-empty": "Keine Assets gefunden",
+                "report-submitted": "Bericht eingereicht!",
+                "no-asset-selected": "Kein Asset ausgewählt"
             }
         };
+
+        // Global variabel til valgt aktiv
+        let selectedAssetVPID = null;
 
         // Sæt standardsprog
         let currentLang = 'da';
 
-        // Sprogskift (uden Django's i18n)
+        // Sprogskift
         document.querySelectorAll('.lang-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -101,26 +137,72 @@
             document.getElementById('camera-btn').textContent = translations[currentLang]["choose-image"];
             document.querySelector('[data-i18n="submit-report"]').textContent = translations[currentLang]["submit-report"];
             document.getElementById('search').placeholder = translations[currentLang]["search-placeholder"];
-            document.querySelector('.asset-item').textContent = translations[currentLang]["asset-list-empty"];
+            document.getElementById('selected-asset-label').textContent =
+                selectedAssetVPID || translations[currentLang]["no-asset-selected"];
+        }
+
+        // Hent og vis aktiver
+        async function loadAssets(searchTerm = '') {
+            const assetList = document.getElementById('asset-list');
+            try {
+                const url = searchTerm
+                    ? `/api/assets/?search=${encodeURIComponent(searchTerm)}`
+                    : '/api/assets/';
+
+                const response = await fetch(url);
+                const assets = await response.json();
+
+                if (assets.length > 0) {
+                    assetList.innerHTML = assets.map(asset =>
+                        `<div class="asset-item ${selectedAssetVPID === asset.VPID ? 'selected' : ''}"
+                             data-vpid="${asset.VPID}"
+                             onclick="selectAsset('${asset.VPID}', this)">
+                            <strong>${asset.VPID}: ${asset.name}</strong>
+                            ${asset.description ? `<div class="asset-description">${asset.description}</div>` : `<div class="asset-description">${translations[currentLang]["asset-list-empty"].replace("aktiver", "beskrivelse")}</div>`}
+                        </div>`
+                    ).join('');
+                } else {
+                    assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
+                }
+            } catch (error) {
+                console.error("Fejl:", error);
+                assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
+            }
+        }
+
+        // Funktion til at håndtere valgt aktiv
+        function selectAsset(vpid, element) {
+            // Fjern 'selected'-klassen fra alle elementer
+            document.querySelectorAll('.asset-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Tilføj 'selected'-klassen til det klikkede element
+            element.classList.add('selected');
+            selectedAssetVPID = vpid;
+            document.getElementById('search').value = vpid;
+            document.getElementById('selected-asset-label').textContent = vpid;
+            updateTexts();
         }
 
         // Søgefunktion
         document.getElementById('search').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.trim();
-            const assetList = document.getElementById('asset-list');
-            if (searchTerm.length > 0) {
-                assetList.innerHTML = '<div class="asset-item">VP1001: Kompressor 1</div>';
-                assetList.classList.remove('hidden');
-            } else {
-                assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
-                assetList.classList.add('hidden');
-            }
+            loadAssets(e.target.value.trim());
+        });
+
+        // Indlæs alle aktiver ved siden start
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTexts();
+            loadAssets();
         });
 
         // Scan QR (simuleret)
         document.getElementById('scan-btn').addEventListener('click', function() {
-            document.getElementById('search').value = "VP1001";
-            document.getElementById('search').dispatchEvent(new Event('input'));
+            const simulatedQR = prompt(translations[currentLang]["search-placeholder"]);
+            if (simulatedQR) {
+                document.getElementById('search').value = simulatedQR;
+                loadAssets(simulatedQR);
+            }
         });
 
         // Kamera
@@ -144,11 +226,46 @@
         });
 
         // Indsend rapport
-        document.getElementById('report-form').addEventListener('submit', function(e) {
+        document.getElementById('report-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert(translations[currentLang]["submit-report"] + "!");
-            this.reset();
-            document.getElementById('preview').classList.add('hidden');
+            const description = document.getElementById('description').value;
+            const preview = document.getElementById('preview');
+
+            // Brug det valgte aktiv (eller søgefeltets værdi)
+            const vpid = selectedAssetVPID || document.getElementById('search').value.trim();
+
+            if (!vpid) {
+                alert(translations[currentLang]["no-asset-selected"]);
+                return;
+            }
+
+            const imageData = preview.classList.contains('hidden') ? null : preview.src;
+
+            try {
+                const response = await fetch('/api/reports/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        VPID: vpid,
+                        description: description,
+                        image: imageData
+                    })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(translations[currentLang]["report-submitted"]);
+                    e.target.reset();
+                    preview.classList.add('hidden');
+                    // Nulstil valgt aktiv
+                    selectedAssetVPID = null;
+                    document.getElementById('selected-asset-label').textContent = translations[currentLang]["no-asset-selected"];
+                    loadAssets(); // Genindlæs listen
+                } else {
+                    alert(data.message || "Fejl ved indsendelse");
+                }
+            } catch (error) {
+                alert("Fejl: " + error);
+            }
         });
     </script>
 </body>
