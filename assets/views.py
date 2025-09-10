@@ -8,32 +8,31 @@ from django.contrib import messages
 from django.db import models
 import json
 import base64
-
-# Valgfri: Installer med `pip install googletrans==4.0.0-rc1` for automatisk oversættelse
-try:
-    from googletrans import Translator
-    TRANSLATOR_AVAILABLE = True
-except ImportError:
-    TRANSLATOR_AVAILABLE = False
-    print("Advarsel: 'googletrans' er ikke installeret. Oversættelse deaktiveret.")
+from deep_translator import MyMemoryTranslator
 
 from .models import Asset, FaultReport
 from .forms import AssetForm
 
+from deep_translator import MyMemoryTranslator
+
 def translate_to_danish(text):
     """
-    Oversætter tekst til dansk, hvis muligt.
-    Returnerer originalen ved fejl eller hvis oversættelse ikke er tilgængelig.
+    Oversætter tekst til dansk ved hjælp af MyMemoryTranslator.
+    Returnerer originalen ved fejl.
     """
-    if not TRANSLATOR_AVAILABLE or not text:
+    if not text or text.strip() == "":
         return text
+
     try:
-        translator = Translator()
-        detected_lang = translator.detect(text).lang
-        return translator.translate(text, dest='da').text if detected_lang != 'da' else text
+        # Oversæt teksten
+        translated = MyMemoryTranslator(source='auto', target='da').translate(text)
+        print(f"Original tekst: {text}")  # Debug: Vis original tekst
+        print(f"Oversat tekst: {translated}")  # Debug: Vis oversat tekst
+        return translated
     except Exception as e:
-        print(f"Kunne ikke oversætte: {e}")
-        return text
+        print(f"Fejl ved oversættelse: {e}")  # Debug: Vis fejl
+        return text  # Returner originalen hvis oversættelse fejler
+
 
 def save_image_from_base64(image_data, report):
     """
@@ -70,10 +69,10 @@ def asset_list_api(request):
         assets = Asset.objects.filter(
             models.Q(VPID__icontains=search_term) |
             models.Q(name__icontains=search_term) |
-            models.Q(description__icontains=search_term)  # Tilføjet: Søg i description
-        ).values('VPID', 'name', 'id', 'description')     # Tilføjet: Returner description
+            models.Q(description__icontains=search_term)
+        ).values('VPID', 'name', 'id', 'description')
     else:
-        assets = Asset.objects.all().values('VPID', 'name', 'id', 'description')  # Tilføjet: Returner description
+        assets = Asset.objects.all().values('VPID', 'name', 'id', 'description')
 
     return JsonResponse(list(assets), safe=False)
 
@@ -81,7 +80,7 @@ def asset_list_api(request):
 def submit_report(request):
     """
     API: Modtager og gemmer en ny fejlrapport.
-    Oversætter beskrivelsen til dansk, hvis nødvendigt.
+    Oversætter beskrivelsen til dansk.
     Forventer JSON med: VPID, description, image (base64).
     """
     if request.method != 'POST':
@@ -90,15 +89,19 @@ def submit_report(request):
     try:
         data = json.loads(request.body)
         vpid = data.get('VPID')
-        description = translate_to_danish(data.get('description', ''))
+        description = data.get('description', '')
 
         if not vpid:
             return JsonResponse({'status': 'error', 'message': 'VPID mangler'}, status=400)
 
-        # Opret rapporten
+        # Oversæt beskrivelsen
+        translated_desc = translate_to_danish(description)
+
+        # Opret rapport med BEGGE beskrivelser
         report = FaultReport.objects.create(
             title=f"Fejlrapport for {vpid}",
-            description=description,  # Altid dansk (eller original, hvis oversættelse fejler)
+            description=translated_desc,  # Oversat version
+            original_description=description,  # Original version
             vpid=vpid,
             priority=2,  # Standard: "Normal"
             status="Ny"
@@ -119,6 +122,7 @@ def submit_report(request):
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Ugyldig JSON'}, status=400)
     except Exception as e:
+        print(f"Fejl i submit_report: {str(e)}")  # Debug: Vis fejl
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
@@ -133,7 +137,7 @@ def edit_asset(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "Aktiv opdateret!")
-            return redirect('index')  # Redirect til forsiden (eller 'asset_list' hvis den findes)
+            return redirect('index')  # Redirect til forsiden
     else:
         form = AssetForm(instance=asset)
 

@@ -15,6 +15,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
 class Asset(models.Model):
     VPID = models.CharField(max_length=100, verbose_name=_("VPID"))
     name = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Navn"))
@@ -30,10 +31,8 @@ class Asset(models.Model):
     image = models.ImageField(upload_to='assets/', blank=True, verbose_name=_("Billede"))
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True, verbose_name=_("QR-kode"))
     is_active = models.BooleanField(default=True, verbose_name=_("Aktiv"))
-
-    # Nye felter (korrekt indrykning!)
     last_inspection_date = models.DateField(
-        verbose_name=_("Sidste synsdato"),  # ← Oversæt også disse!
+        verbose_name=_("Sidste synsdato"),
         blank=True,
         null=True,
         help_text=_("Dato for seneste syn")
@@ -51,14 +50,12 @@ class Asset(models.Model):
         help_text=_("Udstyr monteret på dette aktiv")
     )
 
-    def __str__(self):
-        return f"{self.VPID} - {self.name}"
-
     class Meta:
         verbose_name = _("Aktiv")
         verbose_name_plural = _("Aktiver")
+
     def __str__(self):
-        return self.name or self.VPID
+        return f"{self.VPID} - {self.name}"
 
     def save(self, *args, **kwargs):
         if not self.qr_code:
@@ -90,8 +87,9 @@ class Equipment(models.Model):
 class FaultReport(models.Model):
     title = models.CharField(max_length=100, verbose_name=_("Titel"))
     description = models.TextField(verbose_name=_("Beskrivelse"))
+    original_description = models.TextField(blank=True, null=True, verbose_name=_("Original beskrivelse"))  # ← NYT FELT
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Oprettet"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Opdateret"))  # ← Ny: Spor ændringer
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Opdateret"))
     status = models.CharField(max_length=100, blank=True, verbose_name=_("Status"))
     qr_code = models.CharField(max_length=100, blank=True, default="", verbose_name=_("QR-kode"))
     image = models.ImageField(upload_to='fault_reports/', blank=True, verbose_name=_("Billede"))
@@ -102,8 +100,6 @@ class FaultReport(models.Model):
     asset = models.ForeignKey(
         'Asset', on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Aktiv")
     )
-
-    # Prioritet (dine eksisterende valg bevares)
     priority = models.IntegerField(
         default=2,
         choices=[
@@ -113,9 +109,7 @@ class FaultReport(models.Model):
         ],
         verbose_name=_("Prioritet")
     )
-
-    # NYE FELTER TIL ARBEJDSFLOW:
-    assigned_to = models.ForeignKey(  # ← Tildel til mekaniker
+    assigned_to = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
@@ -123,17 +117,17 @@ class FaultReport(models.Model):
         verbose_name=_("Tildelt mekaniker"),
         related_name='assigned_reports'
     )
-    started_at = models.DateTimeField(  # ← Hvornår mekanikeren startede
+    started_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name=_("Arbejde påbegyndt")
     )
-    completed_at = models.DateTimeField(  # ← Hvornår reparationen blev færdiggjort
+    completed_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name=_("Afsluttet")
     )
-    completed_by = models.ForeignKey(  # ← Hvem afsluttede opgaven
+    completed_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
@@ -141,11 +135,11 @@ class FaultReport(models.Model):
         verbose_name=_("Udført af"),
         related_name='completed_reports'
     )
-    notes = models.TextField(  # ← Noter fra værkfører/mekaniker
+    notes = models.TextField(
         blank=True,
         verbose_name=_("Noter (til mekaniker)")
     )
-    is_approved = models.BooleanField(  # ← Godkendt af værkfører (valgfrit)
+    is_approved = models.BooleanField(
         default=False,
         verbose_name=_("Godkendt")
     )
@@ -153,13 +147,12 @@ class FaultReport(models.Model):
     class Meta:
         verbose_name = _("Fejlrapport")
         verbose_name_plural = _("Fejlrapporter")
-        ordering = ['-priority', '-created_at']  # ← Sorter efter prioritet og dato
+        ordering = ['-priority', '-created_at']
 
     def __str__(self):
         return f"{self.asset.VPID if self.asset else self.vpid}: {self.title} ({self.get_priority_display()})"
 
     def save(self, *args, **kwargs):
-        # Opdater `updated_at` ved hver gem
         if not self.created_at:
             self.created_at = timezone.now()
         self.updated_at = timezone.now()
@@ -167,7 +160,6 @@ class FaultReport(models.Model):
 
     @property
     def current_status(self):
-        """Hjælpefunktion til at vise status på dansk."""
         if self.completed_at:
             return _("Færdig")
         elif self.started_at:
