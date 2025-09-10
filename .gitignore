@@ -1,3 +1,5 @@
-venv_310/
 __pycache__/
 *.pyc
+*.swp
+.DS_Store
+.env
