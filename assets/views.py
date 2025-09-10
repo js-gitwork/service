@@ -6,33 +6,44 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
+from django.utils.translation import gettext as _
 import json
 import base64
-from deep_translator import MyMemoryTranslator
-
 from .models import Asset, FaultReport
 from .forms import AssetForm
+from translator import oversæt
 
-from deep_translator import MyMemoryTranslator
+@csrf_exempt
+def submit_report(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            beskrivelse = data.get('beskrivelse', '')
+            sprog = data.get('sprog', 'pl')  # Hent sprog fra frontend (f.eks. 'pl', 'de', 'en')
 
-def translate_to_danish(text):
-    """
-    Oversætter tekst til dansk ved hjælp af MyMemoryTranslator.
-    Returnerer originalen ved fejl.
-    """
-    if not text or text.strip() == "":
-        return text
+            # Oversæt beskrivelsen til dansk
+            oversat_beskrivelse = oversæt(beskrivelse, fra_sprog=sprog, mål_sprog='da')
 
-    try:
-        # Oversæt teksten
-        translated = MyMemoryTranslator(source='auto', target='da').translate(text)
-        print(f"Original tekst: {text}")  # Debug: Vis original tekst
-        print(f"Oversat tekst: {translated}")  # Debug: Vis oversat tekst
-        return translated
-    except Exception as e:
-        print(f"Fejl ved oversættelse: {e}")  # Debug: Vis fejl
-        return text  # Returner originalen hvis oversættelse fejler
+            # Gem rapporten i databasen (eksempel)
+            FaultReport.objects.create(
+                beskrivelse_original=beskrivelse,
+                beskrivelse_oversat=oversat_beskrivelse,
+                sprog=sprog,
+                dato=timezone.now()
+            )
 
+            # Returner succesbesked (oversat via Django-rosetta)
+            return JsonResponse({
+                'status': 'success',
+                'message': _('Rapport indsendt! Tak for din indsats.'),
+                'oversat': oversat_beskrivelse
+            })
+        except Exception as e:
+            # Returner fejlbesked (oversat via Django-rosetta)
+            return JsonResponse({
+                'status': 'error',
+                'message': _('Der opstod en fejl. Prøv venligst igen.')
+            }, status=400)
 
 def save_image_from_base64(image_data, report):
     """
@@ -78,52 +89,45 @@ def asset_list_api(request):
 
 @csrf_exempt
 def submit_report(request):
-    """
-    API: Modtager og gemmer en ny fejlrapport.
-    Oversætter beskrivelsen til dansk.
-    Forventer JSON med: VPID, description, image (base64).
-    """
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Metode ikke tilladt'}, status=405)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            description = data.get('description', '')
+            vpid = data.get('VPID', '')
 
-    try:
-        data = json.loads(request.body)
-        vpid = data.get('VPID')
-        description = data.get('description', '')
+            # Hårdkod sprog til polsk (midlertidig)
+            sprog = 'pl'
 
-        if not vpid:
-            return JsonResponse({'status': 'error', 'message': 'VPID mangler'}, status=400)
+            # Oversæt beskrivelsen til dansk
+            translated_desc = oversæt(description, fra_sprog=sprog, mål_sprog='da')
 
-        # Oversæt beskrivelsen
-        translated_desc = translate_to_danish(description)
+            # Find det tilhørende Asset (hvis VPID er sendt)
+            asset = Asset.objects.filter(VPID=vpid).first()
 
-        # Opret rapport med BEGGE beskrivelser
-        report = FaultReport.objects.create(
-            title=f"Fejlrapport for {vpid}",
-            description=translated_desc,  # Oversat version
-            original_description=description,  # Original version
-            vpid=vpid,
-            priority=2,  # Standard: "Normal"
-            status="Ny"
-        )
+            # Opret fejlrapport med de korrekte felter
+            report = FaultReport.objects.create(
+                title=f"Rapport for {vpid}",
+                description=translated_desc,  # Oversat beskrivelse
+                original_description=description,  # Original beskrivelse
+                vpid=vpid,
+                asset=asset,
+                image=data.get('image'),
+                status="Ny",
+                priority=2  # Default: Normal
+            )
 
-        # Gem billedet (hvis der er et)
-        image_data = data.get('image')
-        if image_data and not save_image_from_base64(image_data, report):
-            print("Billedet kunne ikke gemmes.")
+            return JsonResponse({
+                'status': 'success',
+                'report_id': report.id,
+                'message': _('Rapport indsendt! Tak for din indsats.')
+            })
+        except Exception as e:
+            print("Fejl i submit_report:", str(e))
+            return JsonResponse({
+                'status': 'error',
+                'message': _('Der opstod en fejl. Prøv venligst igen.')
+            }, status=400)
 
-        report.save()
-        return JsonResponse({
-            'status': 'success',
-            'report_id': report.id,
-            'message': 'Rapport modtaget!'
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Ugyldig JSON'}, status=400)
-    except Exception as e:
-        print(f"Fejl i submit_report: {str(e)}")  # Debug: Vis fejl
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 def edit_asset(request, pk):

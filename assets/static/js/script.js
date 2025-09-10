@@ -63,42 +63,44 @@ document.addEventListener('DOMContentLoaded', function() {
         input.click();
     });
 
-    // --- Indsend fejlrapport ---
-    document.getElementById('report-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const description = document.getElementById('description').value;
-        const preview = document.getElementById('preview');
-        const vpid = searchInput.value.trim();
+// --- Indsend fejlrapport ---
+document.getElementById('report-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const description = document.getElementById('description').value;
+    const preview = document.getElementById('preview');
+    const vpid = searchInput.value.trim();
 
-        if (!vpid) {
-            alert("Indtast venligst et aktiv (søg eller scan QR).");
-            return;
+    if (!vpid) {
+        alert("Indtast venligst et aktiv (søg eller scan QR).");
+        return;
+    }
+
+    // Hent base64-billede (hvis der er et)
+    const imageData = preview.classList.contains('hidden') ? null : preview.src;
+
+    try {
+        const response = await fetch('/api/reports/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                VPID: vpid,
+                description: description,
+                image: imageData,
+                sprog: 'pl'  // Midlertidig: sæt default-sprog til polsk
+            })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            alert(`Rapport indsendt! (ID: ${data.report_id})`);
+            e.target.reset();
+            preview.classList.add('hidden');
+        } else {
+            alert(`Fejl: ${data.message}`);
         }
+    } catch (error) {
+        console.error("Fejl ved indsendelse:", error);
+        alert("Der opstod en fejl. Prøv igen.");
+    }
+});
 
-        // Hent base64-billede (hvis der er et)
-        const imageData = preview.classList.contains('hidden') ? null : preview.src;
-
-        try {
-            const response = await fetch('/api/reports/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    VPID: vpid,
-                    description: description,
-                    image: imageData
-                })
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                alert(`Rapport indsendt! (ID: ${data.report_id})`);
-                e.target.reset();
-                preview.classList.add('hidden');
-            } else {
-                alert(`Fejl: ${data.message}`);
-            }
-        } catch (error) {
-            console.error("Fejl ved indsendelse:", error);
-            alert("Der opstod en fejl. Prøv igen.");
-        }
-    });
 });
