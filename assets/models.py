@@ -74,20 +74,32 @@ class Asset(models.Model):
         super().save(*args, **kwargs)
 
 class Equipment(models.Model):
-    Navn = models.CharField(max_length=100, verbose_name=_("Navn"))
-    Beskrivelse = models.TextField(blank=True, verbose_name=_("Beskrivelse"))
+    name = models.CharField(max_length=100, verbose_name=_("Navn"))  # Rettet fra "Navn" → "name"
+    description = models.TextField(blank=True, verbose_name=_("Beskrivelse"))  # Rettet fra "Beskrivelse" → "description"
 
     class Meta:
         verbose_name = _("Udstyr")
         verbose_name_plural = _("Udstyr")
 
     def __str__(self):
-        return self.Navn
+        return self.name  # Rettet fra "Navn" → "name"
 
 class FaultReport(models.Model):
+    LANGUAGE_CHOICES = [
+        ('de', _("Tysk")),
+        ('pl', _("Polsk")),
+        ('en', _("Engelsk")),
+    ]
+
     title = models.CharField(max_length=100, verbose_name=_("Titel"))
-    description = models.TextField(verbose_name=_("Beskrivelse"))
-    original_description = models.TextField(blank=True, null=True, verbose_name=_("Original beskrivelse"))  # ← NYT FELT
+    description = models.TextField(verbose_name=_("Beskrivelse (oversat)"))
+    original_description = models.TextField(blank=True, null=True, verbose_name=_("Original beskrivelse"))
+    sprog = models.CharField(  # NYT FELT: Gemmer det originale sprog
+        max_length=2,
+        choices=LANGUAGE_CHOICES,
+        default='de',
+        verbose_name=_("Originalt sprog")
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Oprettet"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Opdateret"))
     status = models.CharField(max_length=100, blank=True, verbose_name=_("Status"))
