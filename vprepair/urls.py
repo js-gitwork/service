@@ -13,6 +13,7 @@ from assets.views import (
 from assets.qr_utils import print_qr_view
 
 urlpatterns = [
+  
     # System- og API-relaterede URLs (ikke-sprogafhængige)
     path('admin/', admin.site.urls),
     path('rosetta/', include('rosetta.urls')),  # Rosetta for oversættelsesadmin

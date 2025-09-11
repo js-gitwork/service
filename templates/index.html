@@ -7,7 +7,6 @@
     <title>{% trans "Service System" %}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <style>
-        /* Stil til beskrivelsen under hvert aktiv */
         .asset-description {
             font-size: 12px;
             color: #666;
@@ -16,15 +15,11 @@
             font-style: italic;
             white-space: normal;
         }
-
-        /* Highlight det valgte aktiv */
         .asset-item.selected {
             background-color: #e3f2fd;
             border-left: 4px solid var(--primary-color);
             padding-left: 8px;
         }
-
-        /* Hover-effekt (for at vise, at elementet er klikbart) */
         .asset-item:hover {
             background-color: #f5f5f5;
             cursor: pointer;
@@ -53,15 +48,14 @@
     <input type="text" id="search" class="search-input" placeholder="Søg efter aktiv eller scan QR...">
     <button id="scan-btn" class="btn btn-primary" data-i18n="scan-qr">Scan QR-kode</button>
 
-    <!-- Asset-liste (ALTID synlig) -->
+    <!-- Asset-liste -->
     <div id="asset-list-container" class="asset-list-container">
-        <div id="asset-list" class="asset-list">
-            <!-- Indhold indlæses dynamisk via JavaScript -->
-        </div>
+        <div id="asset-list" class="asset-list"></div>
     </div>
 
-    <!-- Fejlrapport-formular -->
+    <!-- Formular med SKJULT SPROG-FELT -->
     <form id="report-form" class="report-form">
+        <input type="hidden" id="sprog-input" name="sprog" value="da">  <!-- Skjult sprog-felt -->
         <div class="form-group">
             <label for="description">Fejlbeskrivelse for: <strong id="selected-asset-label">Ingen valgt</strong></label>
             <textarea id="description" class="form-control" rows="3" required></textarea>
@@ -76,94 +70,55 @@
     <img id="preview" class="image-preview hidden" alt="Preview">
 
     <script>
-        // Oversættelser for knapperne
+        // Oversættelser
         const translations = {
-            da: {
-                "scan-qr": "Scan QR-kode",
-                "choose-image": "Vælg billede",
-                "submit-report": "Indsend rapport",
-                "search-placeholder": "Søg efter aktiv eller scan QR...",
-                "asset-list-empty": "Ingen aktiver fundet",
-                "report-submitted": "Rapport indsendt!",
-                "no-asset-selected": "Ingen aktiv valgt"
-            },
-            en: {
-                "scan-qr": "Scan QR code",
-                "choose-image": "Choose image",
-                "submit-report": "Submit report",
-                "search-placeholder": "Search for asset or scan QR...",
-                "asset-list-empty": "No assets found",
-                "report-submitted": "Report submitted!",
-                "no-asset-selected": "No asset selected"
-            },
-            pl: {
-                "scan-qr": "Zeskanuj kod QR",
-                "choose-image": "Wybierz zdjęcie",
-                "submit-report": "Wyślij raport",
-                "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...",
-                "asset-list-empty": "Nie znaleziono aktywów",
-                "report-submitted": "Raport wysłany!",
-                "no-asset-selected": "Nie wybrano aktywa"
-            },
-            de: {
-                "scan-qr": "QR-Code scannen",
-                "choose-image": "Bild auswählen",
-                "submit-report": "Bericht einreichen",
-                "search-placeholder": "Nach Asset suchen oder QR-Code scannen...",
-                "asset-list-empty": "Keine Assets gefunden",
-                "report-submitted": "Bericht eingereicht!",
-                "no-asset-selected": "Kein Asset ausgewählt"
-            }
+            da: { "scan-qr": "Scan QR-kode", "choose-image": "Vælg billede", "submit-report": "Indsend rapport", "search-placeholder": "Søg efter aktiv eller scan QR...", "asset-list-empty": "Ingen aktiver fundet", "report-submitted": "Rapport indsendt!", "no-asset-selected": "Ingen aktiv valgt" },
+            en: { "scan-qr": "Scan QR code", "choose-image": "Choose image", "submit-report": "Submit report", "search-placeholder": "Search for asset or scan QR...", "asset-list-empty": "No assets found", "report-submitted": "Report submitted!", "no-asset-selected": "No asset selected" },
+            pl: { "scan-qr": "Zeskanuj kod QR", "choose-image": "Wybierz zdjęcie", "submit-report": "Wyślij raport", "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...", "asset-list-empty": "Nie znaleziono aktywów", "report-submitted": "Raport wysłany!", "no-asset-selected": "Nie wybrano aktywa" },
+            de: { "scan-qr": "QR-Code scannen", "choose-image": "Bild auswählen", "submit-report": "Bericht einreichen", "search-placeholder": "Nach Asset suchen oder QR-Code scannen...", "asset-list-empty": "Keine Assets gefunden", "report-submitted": "Bericht eingereicht!", "no-asset-selected": "Kein Asset ausgewählt" }
         };
 
-        // Global variabel til valgt aktiv
+        // Global variabel til valgt aktiv og sprog
         let selectedAssetVPID = null;
-
-        // Sæt standardsprog
         let currentLang = 'da';
 
-        // Sprogskift
+        // Opdater skjult sprog-felt + tekster ved flag-klik
         document.querySelectorAll('.lang-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 currentLang = this.dataset.lang;
+                document.getElementById('sprog-input').value = currentLang;  // Opdater skjult felt
                 updateTexts();
+                console.log("Sprog opdateret til:", currentLang);  // Debug
             });
         });
 
-        // Opdater tekster baseret på valgt sprog
+        // Opdater tekster baseret på sprog
         function updateTexts() {
             document.getElementById('scan-btn').textContent = translations[currentLang]["scan-qr"];
             document.getElementById('camera-btn').textContent = translations[currentLang]["choose-image"];
             document.querySelector('[data-i18n="submit-report"]').textContent = translations[currentLang]["submit-report"];
             document.getElementById('search').placeholder = translations[currentLang]["search-placeholder"];
-            document.getElementById('selected-asset-label').textContent =
-                selectedAssetVPID || translations[currentLang]["no-asset-selected"];
+            document.getElementById('selected-asset-label').textContent = selectedAssetVPID || translations[currentLang]["no-asset-selected"];
         }
 
         // Hent og vis aktiver
         async function loadAssets(searchTerm = '') {
             const assetList = document.getElementById('asset-list');
             try {
-                const url = searchTerm
-                    ? `/api/assets/?search=${encodeURIComponent(searchTerm)}`
-                    : '/api/assets/';
-
+                const url = searchTerm ? `/api/assets/?search=${encodeURIComponent(searchTerm)}` : '/api/assets/';
                 const response = await fetch(url);
                 const assets = await response.json();
-
-                if (assets.length > 0) {
-                    assetList.innerHTML = assets.map(asset =>
+                assetList.innerHTML = assets.length > 0
+                    ? assets.map(asset =>
                         `<div class="asset-item ${selectedAssetVPID === asset.VPID ? 'selected' : ''}"
                              data-vpid="${asset.VPID}"
                              onclick="selectAsset('${asset.VPID}', this)">
                             <strong>${asset.VPID}: ${asset.name}</strong>
                             ${asset.description ? `<div class="asset-description">${asset.description}</div>` : `<div class="asset-description">${translations[currentLang]["asset-list-empty"].replace("aktiver", "beskrivelse")}</div>`}
                         </div>`
-                    ).join('');
-                } else {
-                    assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
-                }
+                    ).join('')
+                    : `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
             } catch (error) {
                 console.error("Fejl:", error);
                 assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
@@ -172,12 +127,7 @@
 
         // Funktion til at håndtere valgt aktiv
         function selectAsset(vpid, element) {
-            // Fjern 'selected'-klassen fra alle elementer
-            document.querySelectorAll('.asset-item').forEach(el => {
-                el.classList.remove('selected');
-            });
-
-            // Tilføj 'selected'-klassen til det klikkede element
+            document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('selected'));
             element.classList.add('selected');
             selectedAssetVPID = vpid;
             document.getElementById('search').value = vpid;
@@ -188,12 +138,6 @@
         // Søgefunktion
         document.getElementById('search').addEventListener('input', function(e) {
             loadAssets(e.target.value.trim());
-        });
-
-        // Indlæs alle aktiver ved siden start
-        document.addEventListener('DOMContentLoaded', function() {
-            updateTexts();
-            loadAssets();
         });
 
         // Scan QR (simuleret)
@@ -225,13 +169,11 @@
             input.click();
         });
 
-        // Indsend rapport
+        // Indsend rapport (OPdateret med sprog-felt)
         document.getElementById('report-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const description = document.getElementById('description').value;
             const preview = document.getElementById('preview');
-
-            // Brug det valgte aktiv (eller søgefeltets værdi)
             const vpid = selectedAssetVPID || document.getElementById('search').value.trim();
 
             if (!vpid) {
@@ -240,6 +182,7 @@
             }
 
             const imageData = preview.classList.contains('hidden') ? null : preview.src;
+            const sprog = document.getElementById('sprog-input').value;  // Hent sprog fra skjult felt
 
             try {
                 const response = await fetch('/api/reports/', {
@@ -248,7 +191,8 @@
                     body: JSON.stringify({
                         VPID: vpid,
                         description: description,
-                        image: imageData
+                        image: imageData,
+                        sprog: sprog  // Send sprog med!
                     })
                 });
                 const data = await response.json();
@@ -256,16 +200,21 @@
                     alert(translations[currentLang]["report-submitted"]);
                     e.target.reset();
                     preview.classList.add('hidden');
-                    // Nulstil valgt aktiv
                     selectedAssetVPID = null;
                     document.getElementById('selected-asset-label').textContent = translations[currentLang]["no-asset-selected"];
-                    loadAssets(); // Genindlæs listen
+                    loadAssets();
                 } else {
                     alert(data.message || "Fejl ved indsendelse");
                 }
             } catch (error) {
                 alert("Fejl: " + error);
             }
+        });
+
+        // Indlæs alle aktiver ved siden start
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTexts();
+            loadAssets();
         });
     </script>
 </body>

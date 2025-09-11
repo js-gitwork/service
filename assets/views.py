@@ -20,25 +20,25 @@ def submit_report(request):
             data = json.loads(request.body)
             description = data.get('description', '')
             vpid = data.get('VPID', '')
-            sprog = data.get('sprog', 'de')  # Default: tysk (kan være 'pl', 'de', 'en')
+            sprog = data.get('sprog', 'de')  # Default: tysk
             image_data = data.get('image', None)
 
-            # Oversæt beskrivelsen til dansk
+            # DEBUG: Vis input
+            print(f"Oversætter fra {sprog} til dansk: '{description}'")
+
+            # Oversæt beskrivelsen
             translated_desc = oversæt(description, fra_sprog=sprog, mål_sprog='da')
 
-            # Find det tilhørende Asset (hvis VPID er sendt)
-            asset = Asset.objects.filter(VPID=vpid).first()
+            # DEBUG: Vis output
+            print(f"Resultat: '{translated_desc}'")
 
-            # Opret fejlrapport
+            # Opret rapporten...
             report = FaultReport.objects.create(
                 title=f"Rapport for {vpid}",
-                description=translated_desc,  # Oversat beskrivelse
-                original_description=description,  # Original beskrivelse
+                description=translated_desc,
+                original_description=description,  # Gem originalen!
                 vpid=vpid,
-                asset=asset,
-                status="Ny",
-                priority=2,  # Default: Normal
-                sprog=sprog  # Gem det valgte sprog
+                sprog=sprog
             )
 
             # Gem billede (hvis sendt)
@@ -46,18 +46,21 @@ def submit_report(request):
                 save_image_from_base64(image_data, report)
                 report.save()
 
+            # Sikrer korrekt encoding af specialtegn (æ, ø, å) i JSON-svar
             return JsonResponse({
                 'status': 'success',
                 'report_id': report.id,
                 'message': _('Rapport indsendt! Tak for din indsats.'),
-                'oversat': translated_desc
+                'oversat': translated_desc  # Ingen ekstra encoding nødvendig (Django håndterer UTF-8 automatisk)
             })
+
         except Exception as e:
             print("Fejl i submit_report:", str(e))
             return JsonResponse({
                 'status': 'error',
                 'message': _('Der opstod en fejl. Prøv venligst igen.')
             }, status=400)
+
 
 def save_image_from_base64(image_data, report):
     """Gemmer et base64-kodet billede til en FaultReport."""

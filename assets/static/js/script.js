@@ -1,4 +1,3 @@
-// Vent på at DOM er indlæst
 document.addEventListener('DOMContentLoaded', function() {
     // --- Søgefunktion ---
     const searchInput = document.getElementById('search');
@@ -12,11 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
             assetList.classList.add('hidden');
             return;
         }
-
         try {
             const response = await fetch(`/api/assets/?search=${encodeURIComponent(searchTerm)}`);
             const assets = await response.json();
-
             if (assets.length > 0) {
                 assetList.innerHTML = assets.map(asset =>
                     `<div class="asset-item" data-vpid="${asset.VPID}">${asset.VPID}: ${asset.name}</div>`
@@ -47,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.capture = 'environment'; // Åbner kamera på mobil
+        input.capture = 'environment';
         input.onchange = function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -63,44 +60,44 @@ document.addEventListener('DOMContentLoaded', function() {
         input.click();
     });
 
-// --- Indsend fejlrapport ---
-document.getElementById('report-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const description = document.getElementById('description').value;
-    const preview = document.getElementById('preview');
-    const vpid = searchInput.value.trim();
+    // --- Indsend fejlrapport (OPDATERET TIL AT BRUGE SKJULT INPUT-FELT) ---
+    document.getElementById('report-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const description = document.getElementById('description').value;
+        const preview = document.getElementById('preview');
+        const vpid = searchInput.value.trim();
 
-    if (!vpid) {
-        alert("Indtast venligst et aktiv (søg eller scan QR).");
-        return;
-    }
-
-    // Hent base64-billede (hvis der er et)
-    const imageData = preview.classList.contains('hidden') ? null : preview.src;
-
-    try {
-        const response = await fetch('/api/reports/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                VPID: vpid,
-                description: description,
-                image: imageData,
-                sprog: 'pl'  // Midlertidig: sæt default-sprog til polsk
-            })
-        });
-        const data = await response.json();
-        if (data.status === 'success') {
-            alert(`Rapport indsendt! (ID: ${data.report_id})`);
-            e.target.reset();
-            preview.classList.add('hidden');
-        } else {
-            alert(`Fejl: ${data.message}`);
+        if (!vpid) {
+            alert("Indtast venligst et aktiv (søg eller scan QR).");
+            return;
         }
-    } catch (error) {
-        console.error("Fejl ved indsendelse:", error);
-        alert("Der opstod en fejl. Prøv igen.");
-    }
-});
 
+        const imageData = preview.classList.contains('hidden') ? null : preview.src;
+        const sprog = document.getElementById('sprog-input').value;  // Hent sprog fra skjult felt
+
+        try {
+            const response = await fetch('/api/reports/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    VPID: vpid,
+                    description: description,
+                    image: imageData,
+                    sprog: sprog  // Send det valgte sprog
+                })
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                alert(`Rapport indsendt! (ID: ${data.report_id})`);
+                e.target.reset();
+                preview.classList.add('hidden');
+            } else {
+                alert(`Fejl: ${data.message}`);
+            }
+        } catch (error) {
+            console.error("Fejl ved indsendelse:", error);
+            alert("Der opstod en fejl. Prøv igen.");
+        }
+    });
 });
