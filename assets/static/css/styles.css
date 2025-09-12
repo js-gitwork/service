@@ -113,11 +113,12 @@ body {
 .report-form {
     width: 95%;
     max-width: 500px;
-    margin: 10px auto;
+    margin: 10px auto;          /* Centreret */
     background-color: var(--white);
     padding: 12px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;     /* Tilføjet: Sikrer padding ikke udvider bredden */
 }
 
 .form-group {
@@ -132,12 +133,15 @@ body {
 }
 
 .form-control {
-    width: 100%;
-    padding: 8px;
+    width: 100%;                /* Fylder hele forældren (.report-form) */
+    box-sizing: border-box;     /* Tilføjet: Sikrer padding ikke udvider bredden */
+    margin: 0;                  /* Fjern standard-margin */
+    padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: 5px;
     resize: vertical;
     font-size: 14px;
+    display: block;             /* Tilføjet: Sikrer fuld bredde */
 }
 
 /* Knap-gruppe */

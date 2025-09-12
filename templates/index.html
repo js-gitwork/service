@@ -61,7 +61,7 @@
             <textarea id="description" class="form-control" rows="3" required></textarea>
         </div>
         <div class="button-group">
-            <button type="button" id="camera-btn" class="btn btn-secondary" data-i18n="choose-image">Vælg billede</button>
+            <button type="button" id="camera-btn" class="btn btn-secondary" data-i18n="choose-image">Billede</button>
             <button type="submit" class="btn btn-primary" data-i18n="submit-report">Indsend rapport</button>
         </div>
     </form>
@@ -70,13 +70,45 @@
     <img id="preview" class="image-preview hidden" alt="Preview">
 
     <script>
-        // Oversættelser
-        const translations = {
-            da: { "scan-qr": "Scan QR-kode", "choose-image": "Vælg billede", "submit-report": "Indsend rapport", "search-placeholder": "Søg efter aktiv eller scan QR...", "asset-list-empty": "Ingen aktiver fundet", "report-submitted": "Rapport indsendt!", "no-asset-selected": "Ingen aktiv valgt" },
-            en: { "scan-qr": "Scan QR code", "choose-image": "Choose image", "submit-report": "Submit report", "search-placeholder": "Search for asset or scan QR...", "asset-list-empty": "No assets found", "report-submitted": "Report submitted!", "no-asset-selected": "No asset selected" },
-            pl: { "scan-qr": "Zeskanuj kod QR", "choose-image": "Wybierz zdjęcie", "submit-report": "Wyślij raport", "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...", "asset-list-empty": "Nie znaleziono aktywów", "report-submitted": "Raport wysłany!", "no-asset-selected": "Nie wybrano aktywa" },
-            de: { "scan-qr": "QR-Code scannen", "choose-image": "Bild auswählen", "submit-report": "Bericht einreichen", "search-placeholder": "Nach Asset suchen oder QR-Code scannen...", "asset-list-empty": "Keine Assets gefunden", "report-submitted": "Bericht eingereicht!", "no-asset-selected": "Kein Asset ausgewählt" }
-        };
+   // Oversættelser
+   const translations = {
+    da: {
+        "scan-qr": "Scan QR-kode",
+        "choose-image": "Foto",  // Ændret fra "Vælg billede" → "Foto"
+        "submit-report": "Indsend rapport",
+        "search-placeholder": "Søg efter aktiv eller scan QR...",
+        "asset-list-empty": "Ingen aktiver fundet",
+        "report-submitted": "Rapport indsendt!",
+        "no-asset-selected": "Ingen aktiv valgt"
+    },
+    en: {
+        "scan-qr": "Scan QR code",
+        "choose-image": "Photo",  // Engelsk
+        "submit-report": "Submit report",
+        "search-placeholder": "Search for asset or scan QR...",
+        "asset-list-empty": "No assets found",
+        "report-submitted": "Report submitted!",
+        "no-asset-selected": "No asset selected"
+    },
+    pl: {
+        "scan-qr": "Zeskanuj kod QR",
+        "choose-image": "Zdjęcie",  // Polsk for "foto" (korrekt stavemåde)
+        "submit-report": "Wyślij raport",
+        "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...",
+        "asset-list-empty": "Nie znaleziono aktywów",
+        "report-submitted": "Raport wysłany!",
+        "no-asset-selected": "Nie wybrano aktywa"
+    },
+    de: {
+        "scan-qr": "QR-Code scannen",
+        "choose-image": "Foto",  // Tysk for "foto" (korrekt stavemåde)
+        "submit-report": "Bericht einreichen",
+        "search-placeholder": "Nach Asset suchen oder QR-Code scannen...",
+        "asset-list-empty": "Keine Assets gefunden",
+        "report-submitted": "Bericht eingereicht!",
+        "no-asset-selected": "Kein Asset ausgewählt"
+    }
+   };
 
         // Global variabel til valgt aktiv og sprog
         let selectedAssetVPID = null;
