@@ -26,7 +26,7 @@ urlpatterns = [
 
     # Danske sider (sproguafhængige URLs, viser altid dansk)
     path('assets/<int:pk>/', asset_detail, name='asset_detail'),  # <-- Tilføj denne linje
-    path('open-reports/', open_reports, name='open_reports'),
+    path('open_reports/', open_reports, name='open_reports'),
     path('mechanic/', mechanic_view, name='mechanic_reports'),
     path('report/<int:report_id>/<str:action>/', update_report_status, name='update_report_status'),
     path('assets/<int:pk>/edit/', edit_asset, name='edit_asset'),
