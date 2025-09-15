@@ -74,21 +74,27 @@ class Asset(models.Model):
         super().save(*args, **kwargs)
 
 class Equipment(models.Model):
-    name = models.CharField(max_length=100, verbose_name=_("Navn"))  # Rettet fra "Navn" → "name"
-    description = models.TextField(blank=True, verbose_name=_("Beskrivelse"))  # Rettet fra "Beskrivelse" → "description"
+    Navn = models.CharField(max_length=100, verbose_name=_("Navn")) 
+    Beskrivelse = models.TextField(blank=True, verbose_name=_("Beskrivelse"))
 
     class Meta:
         verbose_name = _("Udstyr")
         verbose_name_plural = _("Udstyr")
 
     def __str__(self):
-        return self.name  # Rettet fra "Navn" → "name"
+        return self.Navn
 
 class FaultReport(models.Model):
     LANGUAGE_CHOICES = [
         ('de', _("Tysk")),
         ('pl', _("Polsk")),
         ('en', _("Engelsk")),
+    ]
+
+    PRIORITY_CHOICES = [  # <-- TILFØJ DETTE
+        (1, 'Høj'),
+        (2, 'Mellem'),
+        (3, 'Lav'),
     ]
 
     title = models.CharField(max_length=100, verbose_name=_("Titel"))

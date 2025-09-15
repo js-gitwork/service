@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p class="last-updated">
+    Sidst opdateret: <span id="update-time">{{ last_updated|date:"d-m-m-Y H:i" }}</span>
+    <span id="update-status"></span>
+</p>
+<div id="reports-container">
+    {% for vpid, reports in reports_by_vpid.items %}
+    <div class="vpid-group">
+        <h2>Aktiv: {{ vpid }}</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>VPID</th>
+                    <th>Beskrivelse</th>
+                    <th>Prioritet</th>
+                    <th>Mekaniker</th>
+                    <th>Indsendt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>{{ report.vpid }}</td>
+                    <td>{{ report.description }}</td>
+                    <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% elif report.priority == 3 %}lav{% else %}ukendt{% endif %}">
+                        {% if report.priority == 1 %}
+                            Høj
+                        {% elif report.priority == 2 %}
+                            Mellem
+                        {% elif report.priority == 3 %}
+                            Lav
+                        {% else %}
+                            <span style="color: purple;">Ukendt ({{ report.priority }})</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ report.assigned_to.get_full_name|default:report.assigned_to.username }}</td>
+                    <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% empty %}
+    <p>Ingen åbne fejlrapporter.</p>
+    {% endfor %}
+</div>
+<style>
+    .vpid-group { margin-bottom: 30px; border: 1px solid #eee; padding: 15px; border-radius: 5px; background: white; }
+    .priority-høj { color: red; font-weight: bold; }
+    .priority-mellem { color: orange; }
+    .priority-lav { color: green; }
+    .priority-ukendt { color: purple; font-style: italic; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    .table th { background-color: var(--primary-color); color: white; }
+    #update-status { color: green; }
+</style>
+<script>
+    // Auto-refresh hvert 60. sekund
+    function refreshReports() {
+        document.getElementById('update-status').textContent = " (opdaterer...)";
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                document.getElementById('reports-container').innerHTML =
+                    doc.getElementById('reports-container').innerHTML;
+                document.getElementById('update-time').textContent =
+                    doc.getElementById('update-time').textContent;
+                document.getElementById('update-status').textContent = " ✓";
+            })
+            .catch(error => {
+                document.getElementById('update-status').textContent = " (fejl)";
+                console.error("Opdateringsfejl:", error);
+            });
+    }
+    // Start auto-refresh ved indlæsning
+    window.onload = function() {
+        setInterval(refreshReports, 60000);  // 60.000 ms = 60 sekunder
+    };
+</script>
+{% endblock %}

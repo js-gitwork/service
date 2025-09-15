@@ -74,6 +74,7 @@ USE_I18N = True  # ← Sørg for denne er True (aktiverer oversættelser)
 USE_L10N = True
 USE_TZ = True
 
+
 # Sprogindstillinger (tilføjet/opdateret)
 LANGUAGE_CODE = 'da'
 LANGUAGES = [
@@ -97,7 +98,10 @@ MIDDLEWARE = [
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'staticfiles'),   # Global CSS/JS
+    os.path.join(BASE_DIR, 'assets/static'), # App-specifikke filer (flag)
+]
 
 # Media files
 MEDIA_URL = '/media/'

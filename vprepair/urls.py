@@ -9,32 +9,29 @@ from assets.views import (
     mechanic_view,
     update_report_status,
     edit_asset,
+    open_reports,
+    print_qr_view,
+    asset_detail,  # <-- Tilføj denne til importen
 )
-from assets.qr_utils import print_qr_view
 
 urlpatterns = [
-  
-    # System- og API-relaterede URLs (ikke-sprogafhængige)
+    # System- og API-URLs (sproguafhængige)
     path('admin/', admin.site.urls),
-    path('rosetta/', include('rosetta.urls')),  # Rosetta for oversættelsesadmin
-    path('i18n/', include('django.conf.urls.i18n')),  # Django's i18n URLs
-    path('accounts/', include('django.contrib.auth.urls')),  # Auth (login/logout)
-    path('', index, name='index'),  # Forsiden (altid index.html, uanset sprog)
+    path('rosetta/', include('rosetta.urls')),  # Til oversættelsesadmin (kun for dig)
+    path('i18n/', include('django.conf.urls.i18n')),  # Sprogskift (kun for index.html)
 
-    # API-endpoints (ikke-sprogafhængige)
+    # API-endpoints (sproguafhængige)
     path('api/assets/', asset_list_api, name='asset_list_api'),
     path('api/reports/', submit_report, name='submit_report'),
-]
 
-# Sprogafhængige URLs (brug i18n_patterns)
-urlpatterns += i18n_patterns(
-    # Mechanic-relaterede sider
+    # Danske sider (sproguafhængige URLs, viser altid dansk)
+    path('assets/<int:pk>/', asset_detail, name='asset_detail'),  # <-- Tilføj denne linje
+    path('open-reports/', open_reports, name='open_reports'),
     path('mechanic/', mechanic_view, name='mechanic_reports'),
     path('report/<int:report_id>/<str:action>/', update_report_status, name='update_report_status'),
-
-    # Asset-redigering (sprogafhængig)
     path('assets/<int:pk>/edit/', edit_asset, name='edit_asset'),
-
-    # QR-print (sprogafhængig)
     path('print_qr/<int:asset_id>/', print_qr_view, name='print_qr'),
-)
+
+    # Forside (index.html) - SKAL være sprogafhængig (for indtastning)
+    path('', index, name='index'),
+]

@@ -6,12 +6,23 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
+from django.db.models import Case, When, Value, IntegerField
 from django.utils.translation import gettext as _
 import json
 import base64
 from .models import Asset, FaultReport
 from .forms import AssetForm
 from translator import oversæt
+
+# Hjælpefunktion til at vise prioritet som tekst
+def get_priority_display(priority):
+    """Konverterer numerisk prioritet til tekst."""
+    priority_map = {
+        1: 'Høj',
+        2: 'Mellem',
+        3: 'Lav',
+    }
+    return priority_map.get(priority, 'Ukendt')
 
 @csrf_exempt
 def submit_report(request):
@@ -20,40 +31,27 @@ def submit_report(request):
             data = json.loads(request.body)
             description = data.get('description', '')
             vpid = data.get('VPID', '')
-            sprog = data.get('sprog', 'de')  # Default: tysk
+            sprog = data.get('sprog', 'de')
             image_data = data.get('image', None)
-
-            # DEBUG: Vis input
             print(f"Oversætter fra {sprog} til dansk: '{description}'")
-
-            # Oversæt beskrivelsen
             translated_desc = oversæt(description, fra_sprog=sprog, mål_sprog='da')
-
-            # DEBUG: Vis output
             print(f"Resultat: '{translated_desc}'")
-
-            # Opret rapporten...
             report = FaultReport.objects.create(
                 title=f"Rapport for {vpid}",
                 description=translated_desc,
-                original_description=description,  # Gem originalen!
+                original_description=description,
                 vpid=vpid,
-                sprog=sprog
+                sprog=sprog,
+                created_at=timezone.now()
             )
-
-            # Gem billede (hvis sendt)
             if image_data:
                 save_image_from_base64(image_data, report)
-                report.save()
-
-            # Sikrer korrekt encoding af specialtegn (æ, ø, å) i JSON-svar
             return JsonResponse({
                 'status': 'success',
                 'report_id': report.id,
                 'message': _('Rapport indsendt! Tak for din indsats.'),
-                'oversat': translated_desc  # Ingen ekstra encoding nødvendig (Django håndterer UTF-8 automatisk)
+                'oversat': translated_desc
             })
-
         except Exception as e:
             print("Fejl i submit_report:", str(e))
             return JsonResponse({
@@ -61,9 +59,7 @@ def submit_report(request):
                 'message': _('Der opstod en fejl. Prøv venligst igen.')
             }, status=400)
 
-
 def save_image_from_base64(image_data, report):
-    """Gemmer et base64-kodet billede til en FaultReport."""
     if not image_data:
         return False
     try:
@@ -77,12 +73,10 @@ def save_image_from_base64(image_data, report):
         return False
 
 def index(request):
-    """Renderer forsiden (index.html)."""
     return render(request, 'index.html')
 
 @csrf_exempt
 def asset_list_api(request):
-    """API: Returnerer liste af aktiver (VPID, name, description) som JSON."""
     if request.method != 'GET':
         return JsonResponse({'error': 'Metode ikke tilladt'}, status=405)
     search_term = request.GET.get('search', '')
@@ -98,7 +92,6 @@ def asset_list_api(request):
 
 @login_required
 def edit_asset(request, pk):
-    """Rediger et aktiv via formular."""
     asset = get_object_or_404(Asset, pk=pk)
     if request.method == "POST":
         form = AssetForm(request.POST, request.FILES, instance=asset)
@@ -111,18 +104,22 @@ def edit_asset(request, pk):
     return render(request, 'assets/edit_asset.html', {'form': form, 'asset': asset})
 
 @login_required
+def asset_detail(request, pk):
+    asset = get_object_or_404(Asset, pk=pk)
+    return render(request, 'assets/asset_detail.html', {'asset': asset})
+
+
+@login_required
 def mechanic_view(request):
-    """Vis åbne fejlrapporter tildelt den loggede ind bruger."""
     reports = FaultReport.objects.filter(
         assigned_to=request.user,
         completed_at__isnull=True
-    ).order_by('-priority', 'created_at')
+    ).order_by('priority', '-created_at')  # Sorter efter numerisk prioritet (1=Høj, 2=Mellem, 3=Lav)
     return render(request, 'assets/mechanic_view.html', {'reports': reports})
 
 @csrf_exempt
 @login_required
 def update_report_status(request, report_id, action):
-    """Opdaterer status for en fejlrapport."""
     report = get_object_or_404(FaultReport, id=report_id)
     if action == 'start':
         report.started_at = timezone.now()
@@ -136,3 +133,71 @@ def update_report_status(request, report_id, action):
         return JsonResponse({'status': 'success', 'message': 'Rapport afsluttet'})
     else:
         return JsonResponse({'status': 'error', 'message': 'Ugyldig handling'}, status=400)
+
+def open_reports(request):
+    """
+    Viser ALLE åbne fejlrapporter, grupperet efter VPID og sorteret efter prioritet/indsendelsesdato.
+    Sikker version der håndterer alle typer prioriteter (tal, tekst, None).
+    """
+    from django.db.models import Case, When, Value, IntegerField  # <-- Tilføj denne linje øverst i funktionen
+
+    # Hent åbne rapporter med sikker sortering
+    open_reports = FaultReport.objects.filter(
+        completed_at__isnull=True
+    ).exclude(
+        assigned_to__isnull=True
+    ).annotate(
+        # Sikker sortering: Hvis priority er 1, 2 eller 3, brug dem - ellers sæt til 4 (lavest)
+        safe_priority=Case(
+            When(priority=1, then=Value(1)),
+            When(priority=2, then=Value(2)),
+            When(priority=3, then=Value(3)),
+            default=Value(4),  # Alt andet (None, tekst, ugyldige tal) kommer bagerst
+            output_field=IntegerField(),
+        )
+    ).order_by('vpid', 'safe_priority', '-created_at')
+
+    # Grupper efter VPID
+    reports_by_vpid = {}
+    for report in open_reports:
+        vpid = report.vpid
+        if vpid not in reports_by_vpid:
+            reports_by_vpid[vpid] = []
+        reports_by_vpid[vpid].append(report)
+
+    context = {
+        'reports_by_vpid': reports_by_vpid,
+        'title': 'Åbne fejlrapporter (grupperet efter aktiv)',
+        'last_updated': timezone.now(),
+    }
+    return render(request, 'open_reports.html', context)
+
+@login_required
+def print_qr_view(request, asset_id):
+    from io import BytesIO
+    import qrcode
+    import base64
+
+    asset = get_object_or_404(Asset, id=asset_id)
+
+    # Generer QR-kode (50x50mm = ~200x200px ved 150 DPI)
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(asset.VPID)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    # Gem som base64
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return render(request, 'assets/print_qr.html', {
+        'page_title': f"QR-kode: {asset.VPID}",
+        'asset': asset,
+        'qr_code': qr_base64,
+    })

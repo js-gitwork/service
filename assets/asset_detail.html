@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ asset.name }} ({{ asset.VPID }})</h1>
+<p>{{ asset.description }}</p>
+{% if asset.last_inspection_date %}
+    <p>Sidste inspektion: {{ asset.last_inspection_date|date:"d-m-Y" }}</p>
+{% endif %}
+{% if asset.last_service_date %}
+    <p>Sidste service: {{ asset.last_service_date|date:"d-m-Y" }}</p>
+{% endif %}
+<a href="{% url 'edit_asset' asset.id %}">Rediger aktiv</a>
+{% endblock %}

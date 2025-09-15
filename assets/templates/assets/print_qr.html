@@ -1,24 +1,38 @@
-<!-- assets/templates/assets/print_qr.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <title>{{ page_title }}</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .qr-code { margin: 20px auto; }
-        .qr-code img { max-width: 100%; height: auto; }
-        .asset-info { margin: 10px; font-size: 1.2em; }
+        @media print {
+            @page { margin: 0; }  /* Fjerner standardmargener */
+        }
+        body {
+            width: 100%;
+            margin: 0;
+            padding: 20px;  /* Tilføjer lidt padding for A4 */
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .vpid {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;  /* Mindre afstand mellem tekst og QR */
+        }
+        .qr-code {
+            display: inline-block;  /* Centrerer QR-koden */
+            width: 50mm;
+            height: 50mm;
+        }
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
-<body>
-    <h1>{{ page_title }}</h1>
-    <div class="asset-info">
-        <p><strong>VPID:</strong> {{ asset.VPID }}</p>
-        <p><strong>Navn:</strong> {{ asset.name }}</p>
-    </div>
+<body onload="window.print()">
+    <div class="vpid">{{ asset.VPID }}</div>
     <div class="qr-code">
         <img src="data:image/png;base64,{{ qr_code }}" alt="QR-kode for {{ asset.VPID }}">
     </div>
-    <p>Scan QR-koden for at få adgang til aktivet.</p>
 </body>
 </html>

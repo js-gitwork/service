@@ -15,40 +15,39 @@ class AssetAdmin(admin.ModelAdmin):
     actions = None
 
     def qr_print_button(self, obj):
-        return format_html('<a href="{}" target="_blank">Print QR</a>', reverse('admin:qr_print', args=[obj.id]))
+        return format_html(
+            '<a href="{}" target="_blank" style="background: #417690; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; display: inline-block;">Print QR</a>',
+            reverse('print_qr', args=[obj.id])
+        )
     qr_print_button.short_description = "Print QR-kode"
 
     def open_in_assets(self, obj):
-        return format_html('<a href="{}" target="_blank">Åbn</a>', reverse('asset_detail', args=[obj.id]))
-    open_in_assets.short_description = "Åbn i aktiver"
+         return format_html(
+            '<a href="{}" target="_blank" class="button">Ret</a>',
+            reverse('edit_asset', args=[obj.pk])  # <-- Brug `obj.pk` i stedet for `obj.id`
+        )
+
+    open_in_assets.short_description = "Ret"
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')  # Rettet fra 'Navn', 'Beskrivelse'
-    search_fields = ('name',)  # Rettet fra 'Navn'
+    list_display = ('Navn', 'Beskrivelse')
+    search_fields = ('Navn',)
 
 @admin.register(FaultReport)
 class FaultReportAdmin(admin.ModelAdmin):
     list_display = (
         'title', 'asset', 'priority', 'current_status',
-        'created_at', 'assigned_to', 'sprog'  # Tilføjet 'sprog'
+        'created_at', 'assigned_to', 'sprog'
     )
-    list_filter = ('priority', 'status', 'assigned_to', 'sprog')  # Tilføjet 'sprog'
+    list_filter = ('priority', 'status', 'assigned_to', 'sprog')
     search_fields = ('title', 'vpid', 'description', 'original_description')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
-        (None, {
-            'fields': ('title', 'asset', 'vpid', 'priority', 'sprog')
-        }),
-        ('Beskrivelser', {
-            'fields': ('description', 'original_description')
-        }),
-        ('Status', {
-            'fields': ('status', 'assigned_to', 'started_at', 'completed_at', 'completed_by', 'repair_status')
-        }),
-        ('Billeder', {
-            'fields': ('image',)
-        }),
+        (None, {'fields': ('title', 'asset', 'vpid', 'priority', 'sprog')}),
+        ('Beskrivelser', {'fields': ('description', 'original_description')}),
+        ('Status', {'fields': ('status', 'assigned_to', 'started_at', 'completed_at', 'completed_by', 'repair_status')}),
+        ('Billeder', {'fields': ('image',)}),
     )
 
 @admin.register(Category)
