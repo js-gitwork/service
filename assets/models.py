@@ -27,8 +27,8 @@ class Asset(models.Model):
         blank=True,
         verbose_name=_("Kategori")
     )
-    location = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Lokation"))
-    image = models.ImageField(upload_to='assets/', blank=True, verbose_name=_("Billede"))
+    location = models.CharField(max_length=100, blank=True, null=True, default="", verbose_name=_("Lokation"))  # null=True tilføjet
+    image = models.ImageField(upload_to='assets/', blank=True, null=True, verbose_name=_("Billede"))  # null=True er allerede sat
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True, verbose_name=_("QR-kode"))
     is_active = models.BooleanField(default=True, verbose_name=_("Aktiv"))
     last_inspection_date = models.DateField(
@@ -49,6 +49,9 @@ class Asset(models.Model):
         blank=True,
         help_text=_("Udstyr monteret på dette aktiv")
     )
+    in_workshop = models.BooleanField(default=False, verbose_name="På værksted")
+    workshop_from_date = models.DateField(null=True, blank=True, verbose_name="Fra dato")
+    workshop_expected_return = models.DateField(null=True, blank=True, verbose_name="Forventet retur")
 
     class Meta:
         verbose_name = _("Aktiv")
@@ -74,7 +77,7 @@ class Asset(models.Model):
         super().save(*args, **kwargs)
 
 class Equipment(models.Model):
-    Navn = models.CharField(max_length=100, verbose_name=_("Navn")) 
+    Navn = models.CharField(max_length=100, verbose_name=_("Navn"))
     Beskrivelse = models.TextField(blank=True, verbose_name=_("Beskrivelse"))
 
     class Meta:
@@ -90,17 +93,15 @@ class FaultReport(models.Model):
         ('pl', _("Polsk")),
         ('en', _("Engelsk")),
     ]
-
-    PRIORITY_CHOICES = [  # <-- TILFØJ DETTE
+    PRIORITY_CHOICES = [
         (1, 'Høj'),
         (2, 'Mellem'),
         (3, 'Lav'),
     ]
-
     title = models.CharField(max_length=100, verbose_name=_("Titel"))
     description = models.TextField(verbose_name=_("Beskrivelse (oversat)"))
     original_description = models.TextField(blank=True, null=True, verbose_name=_("Original beskrivelse"))
-    sprog = models.CharField(  # NYT FELT: Gemmer det originale sprog
+    sprog = models.CharField(
         max_length=2,
         choices=LANGUAGE_CHOICES,
         default='de',
@@ -108,13 +109,13 @@ class FaultReport(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Oprettet"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Opdateret"))
-    status = models.CharField(max_length=100, blank=True, verbose_name=_("Status"))
-    qr_code = models.CharField(max_length=100, blank=True, default="", verbose_name=_("QR-kode"))
+    status = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Status"))  # null=True tilføjet
+    qr_code = models.CharField(max_length=100, blank=True, null=True, default="", verbose_name=_("QR-kode"))  # null=True tilføjet
     image = models.ImageField(upload_to='fault_reports/', blank=True, verbose_name=_("Billede"))
     repair_status = models.BooleanField(default=False, verbose_name=_("Reparationsstatus"))
-    machine = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Maskine"))
-    location = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Lokation"))
-    vpid = models.CharField(max_length=100, blank=True, verbose_name=_("VPID"))
+    machine = models.CharField(max_length=100, blank=True, null=True, default="", verbose_name=_("Maskine"))  # null=True tilføjet
+    location = models.CharField(max_length=100, blank=True, null=True, default="", verbose_name=_("Lokation"))  # null=True tilføjet
+    vpid = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("VPID"))  # null=True tilføjet
     asset = models.ForeignKey(
         'Asset', on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Aktiv")
     )

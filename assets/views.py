@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
-from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Case, When, Value, IntegerField, Q
 from django.utils.translation import gettext as _
 import json
 import base64
@@ -23,6 +23,19 @@ def get_priority_display(priority):
         3: 'Lav',
     }
     return priority_map.get(priority, 'Ukendt')
+
+def asset_list_api(request):
+    """API-endpoint til søgning efter aktiver (VPID, navn, beskrivelse)."""
+    search_term = request.GET.get('search', '')
+    if search_term:
+        assets = Asset.objects.filter(
+            Q(VPID__icontains=search_term) |
+            Q(name__icontains=search_term) |
+            Q(description__icontains=search_term)
+        ).values('VPID', 'name', 'description')
+    else:
+        assets = Asset.objects.all().values('VPID', 'name', 'description')
+    return JsonResponse(list(assets), safe=False)
 
 @csrf_exempt
 def submit_report(request):
@@ -73,7 +86,9 @@ def save_image_from_base64(image_data, report):
         return False
 
 def index(request):
-    return render(request, 'index.html')
+    assets = Asset.objects.all().order_by('VPID')  # Hent alle aktiver
+    return render(request, 'index.html', {'assets': assets})  # Send dem til templaten
+
 
 @csrf_exempt
 def asset_list_api(request):

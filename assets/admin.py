@@ -7,12 +7,25 @@ from .models import Asset, Category, Equipment, FaultReport
 class AssetAdmin(admin.ModelAdmin):
     list_display = (
         'VPID', 'name', 'last_inspection_date',
-        'last_service_date', 'qr_print_button', 'open_in_assets'
+        'last_service_date', 'in_workshop',  # <-- Tilføjet
+        'workshop_from_date',                # <-- Tilføjet
+        'workshop_expected_return',          # <-- Tilføjet
+        'qr_print_button', 'open_in_assets'
     )
-    list_filter = ('category', 'is_active', 'last_inspection_date', 'last_service_date')
+    list_editable = (
+        'in_workshop',                      # <-- Tilføjet
+        'workshop_from_date',               # <-- Tilføjet
+        'workshop_expected_return',         # <-- Tilføjet
+    )
+    list_filter = (
+        'category', 'is_active',
+        'last_inspection_date', 'last_service_date',
+        'in_workshop',                      # <-- Tilføjet (valgfrit)
+    )
     search_fields = ('VPID', 'name', 'description')
     filter_horizontal = ('equipment',)
     actions = None
+
 
     def qr_print_button(self, obj):
         return format_html(
