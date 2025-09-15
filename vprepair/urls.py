@@ -1,42 +1,50 @@
 from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls.i18n import i18n_patterns
-from django.contrib.auth import views as auth_views
+from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from assets.views import (
-    index,
+    index,  # Din funktion hedder 'index', ikke 'index_view'
+    mechanic_view,
+    switch_mechanic,
+    update_report_status,
+    assign_report_to_me,
+    open_reports,
     asset_list_api,
     submit_report,
-    mechanic_view,
-    update_report_status,
     edit_asset,
-    open_reports,
-    print_qr_view,
     asset_detail,
-    assign_report_to_me,
+    print_qr_view,
 )
 
 urlpatterns = [
-    # System- og API-URLs (sproguafhængige)
+    # Admin
     path('admin/', admin.site.urls),
-    path('rosetta/', include('rosetta.urls')),  # Til oversættelsesadmin (kun for dig)
-    path('i18n/', include('django.conf.urls.i18n')),  # Sprogskift (kun for index.html)
 
-    # API-endpoints (sproguafhængige)
-    path('api/assets/', asset_list_api, name='asset_list_api'),
-    path('api/reports/', submit_report, name='submit_report'),
+    # Hovedside
+    path('', index, name='index'),  # Brug 'index' i stedet for 'index_view'
 
-    # Danske sider (sproguafhængige URLs, viser altid dansk)
-    path('assets/<int:pk>/', asset_detail, name='asset_detail'),  # <-- Tilføj denne linje
+    # Mekaniker-views
+    path('mechanic/', mechanic_view, name='mechanic_reports'), 
+    path('mechanic/switch/', switch_mechanic, name='switch_mechanic'),
+
+    # Fejlrapport-handling
+    path('reports/<int:report_id>/start/', update_report_status, name='update_report_status_start'),
+    path('reports/<int:report_id>/complete/', update_report_status, name='update_report_status_complete'),
+    path('reports/<int:report_id>/assign/', assign_report_to_me, name='assign_report_to_me'),
+
+    # Åbne fejlrapporter
     path('open_reports/', open_reports, name='open_reports'),
-    path('mechanic/', mechanic_view, name='mechanic_reports'),
-    path('report/<int:report_id>/<str:action>/', update_report_status, name='update_report_status'),
+
+    # API-endpoints
+    path('api/assets/', asset_list_api, name='api_assets'),
+    path('api/reports/', submit_report, name='api_reports'),
+
+    # Redigering af aktiver
     path('assets/<int:pk>/edit/', edit_asset, name='edit_asset'),
-    path('print_qr/<int:asset_id>/', print_qr_view, name='print_qr'),
-    path('assign_report/<int:report_id>/', assign_report_to_me, name='assign_report_to_me'),
-
-
-    # Forside (index.html) - SKAL være sprogafhængig (for indtastning)
-    path('', index, name='index'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('assets/<int:pk>/', asset_detail, name='asset_detail'),
+    path('assets/<int:asset_id>/qr/', print_qr_view, name='print_qr'),
 ]
+
+# Medie-filer i development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

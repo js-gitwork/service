@@ -13,6 +13,7 @@ import base64
 from .models import Asset, FaultReport
 from .forms import AssetForm
 from translator import oversæt
+from django.contrib.auth.models import User
 
 # Hjælpefunktion til at vise prioritet som tekst
 def get_priority_display(priority):
@@ -89,7 +90,6 @@ def index(request):
     assets = Asset.objects.all().order_by('VPID')  # Hent alle aktiver
     return render(request, 'index.html', {'assets': assets})  # Send dem til templaten
 
-
 @csrf_exempt
 def asset_list_api(request):
     if request.method != 'GET':
@@ -125,20 +125,34 @@ def asset_detail(request, pk):
 
 @login_required
 def mechanic_view(request):
-    # Tildelte rapporter (øverst)
+    # Hent den valgte mekaniker (eller brug den aktuelle bruger)
+    mechanic_id = request.session.get('view_as_mechanic_id')
+    if not mechanic_id:  # Hvis der ikke er valgt en mekaniker, brug den aktuelle bruger
+        current_mechanic = request.user
+    else:
+        current_mechanic = get_object_or_404(User, pk=mechanic_id)
+
+    # Tildelte rapporter
     assigned_reports = FaultReport.objects.filter(
-        assigned_to=request.user,
+        assigned_to=current_mechanic,
         completed_at__isnull=True
     ).order_by('priority', '-created_at')
-    # Utildelte rapporter (nedenunder)
+
+    # Utildelte rapporter
     unassigned_reports = FaultReport.objects.filter(
         assigned_to__isnull=True,
         completed_at__isnull=True
     ).order_by('priority', '-created_at')
+
+    # Hent alle mekanikere (ekskl. superbrugeren selv)
+    all_mechanics = User.objects.exclude(pk=request.user.id).filter(is_staff=True)
+
     return render(request, 'assets/mechanic_view.html', {
         'assigned_reports': assigned_reports,
         'unassigned_reports': unassigned_reports,
         'last_updated': timezone.now(),
+        'current_mechanic': current_mechanic,
+        'all_mechanics': all_mechanics,
     })
 
 @login_required
@@ -165,6 +179,14 @@ def update_report_status(request, report_id, action):
         return JsonResponse({'status': 'success', 'message': 'Rapport afsluttet'})
     else:
         return JsonResponse({'status': 'error', 'message': 'Ugyldig handling'}, status=400)
+
+@login_required
+def switch_mechanic(request):
+    if request.method == 'POST' and request.user.is_superuser:
+        mechanic_id = request.POST.get('mechanic_id')
+        if mechanic_id:
+            request.session['view_as_mechanic_id'] = mechanic_id
+    return redirect('mechanic_reports')  # <-- Brug URL-navnet, ikke stien!
 
 def open_reports(request):
     """

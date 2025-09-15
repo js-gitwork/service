@@ -3,91 +3,155 @@
 <h1>Mine opgaver</h1>
 <p class="last-updated">Sidst opdateret: {{ last_updated|date:"d-m-Y H:i" }}</p>
 
-<!-- Tildelte opgaver (øverst) -->
+<!-- Dropdown til at skifte mekaniker -->
+<div class="mechanic-switcher">
+  <form method="post" action="/mechanic/switch/">
+    {% csrf_token %}
+    <label for="mechanic-select">Vis opgaver for:</label>
+    <select name="mechanic_id" id="mechanic-select">
+      <option value="{{ request.user.id }}" selected>
+        {{ request.user.username }} (Mig selv)
+      </option>
+      {% for user in all_mechanics %}
+        <option value="{{ user.id }}" {% if user.id == current_mechanic.id %}selected{% endif %}>
+          {{ user.username }}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondary">Skift</button>
+  </form>
+  {% if current_mechanic != request.user %}
+    <a href="/mechanic/" class="btn btn-sm btn-outline-secondary">
+      Tilbage til mine opgaver
+    </a>
+  {% endif %}
+</div>
+
+<!-- Tildelte opgaver -->
 <h2>Tildelte opgaver</h2>
 {% if assigned_reports %}
 <div class="reports-container">
-    <table class="reports-table">
-        <thead>
-            <tr>
-                <th style="width: 10%;">VPID</th>
-                <th style="width: 50%;">Beskrivelse</th>
-                <th style="width: 15%;">Prioritet</th>
-                <th style="width: 15%;">Indsendt</th>
-                <th style="width: 10%;">Handlinger</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for report in assigned_reports %}
-            <tr>
-                <td>{{ report.vpid }}</td>
-                <td>{{ report.description }}</td>
-                <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
-                    {{ report.get_priority_display }}
-                </td>
-                <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
-                <td>
-                    <a href="{% url 'update_report_status' report.id 'start' %}" class="button start">Start</a>
-                    <a href="{% url 'update_report_status' report.id 'complete' %}" class="button complete">Afslut</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table class="reports-table">
+    <thead>
+      <tr>
+        <th>VPID</th>
+        <th>Beskrivelse</th>
+        <th>Prioritet</th>
+        <th>Indsendt</th>
+        <th>Handlinger</th>
+      </tr>
+    </thead>
+    <tbody>
+{% for report in assigned_reports %}
+<tr>
+  <td>{{ report.vpid }}</td>
+  <td>{{ report.description }}</td>
+  <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
+      {% if report.priority == 1 %}Høj{% elif report.priority == 2 %}Mellem{% else %}Lav{% endif %}
+  </td>
+  <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
+  <td>
+    <a href="/reports/{{ report.id }}/start/" class="button start">Start</a>
+    <a href="/reports/{{ report.id }}/complete/" class="button complete">Afslut</a>
+  </td>
+</tr>
+{% endfor %}
+
+    </tbody>
+  </table>
 </div>
 {% else %}
 <p>Ingen tildelte opgaver.</p>
 {% endif %}
 
-<!-- Utildelte opgaver (nedenunder) -->
+<!-- Utildelte opgaver -->
 <h2>Utildelte opgaver</h2>
 {% if unassigned_reports %}
 <div class="reports-container">
-    <table class="reports-table">
-        <thead>
-            <tr>
-                <th style="width: 10%;">VPID</th>
-                <th style="width: 50%;">Beskrivelse</th>
-                <th style="width: 15%;">Prioritet</th>
-                <th style="width: 15%;">Indsendt</th>
-                <th style="width: 10%;">Handling</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for report in unassigned_reports %}
-            <tr>
-                <td>{{ report.vpid }}</td>
-                <td>{{ report.description }}</td>
-                <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
-                    {{ report.get_priority_display }}
-                </td>
-                <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
-                <td>
-                    <a href="{% url 'assign_report_to_me' report.id %}" class="button assign">Tilknyt mig</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <table class="reports-table">
+    <thead>
+      <tr>
+        <th>VPID</th>
+        <th>Beskrivelse</th>
+        <th>Prioritet</th>
+        <th>Indsendt</th>
+        <th>Handling</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in unassigned_reports %}
+      <tr>
+        <td>{{ report.vpid }}</td>
+        <td>{{ report.description }}</td>
+        <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
+          {% if report.priority == 1 %}Høj{% elif report.priority == 2 %}Mellem{% else %}Lav{% endif %}
+        </td>
+        <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
+        <td>
+          <a href="/reports/{{ report.id }}/assign/" class="button assign">Tilknyt mig</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% else %}
 <p>Ingen utildelte opgaver.</p>
 {% endif %}
 
+<!-- CSS (direkte i filen for simpelhed) -->
 <style>
-    .reports-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-    .reports-table th, .reports-table td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-    .priority-høj { color: #d32f2f; font-weight: bold; }
-    .priority-mellem { color: #ff9800; }
-    .priority-lav { color: #388e3c; }
-    .button { padding: 6px 12px; margin-right: 5px; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 500; }
-    .button.start { background-color: #4a6fa5; color: white; }
-    .button.complete { background-color: #388e3c; color: white; }
-    .button.assign { background-color: #ff9800; color: white; }
-    .last-updated { color: #555; margin-bottom: 15px; }
+  .reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .reports-table th, .reports-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  .priority-høj { color: #d32f2f; font-weight: bold; }
+  .priority-mellem { color: #ff9800; }
+  .priority-lav { color: #388e3c; }
+  .button {
+    padding: 6px 12px;
+    margin-right: 5px;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+    text-align: center;
+  }
+  .button.start { background: #1976d2; color: white; }
+  .button.complete { background: #4caf50; color: white; }
+  .button.assign { background: #ff9800; color: white; }
+  .mechanic-switcher {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+  .btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+  .btn-outline-secondary {
+    background: transparent;
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    text-decoration: none;
+    padding: 4px 8px;
+  }
 </style>
+
+<!-- Auto-refresh -->
 <script>
-    // Auto-refresh (hvert 60. sekund)
-    setInterval(function() { location.reload(); }, 60000);
+  setTimeout(function() { location.reload(); }, 60000);  // Opdater hvert minut
 </script>
 {% endblock %}
