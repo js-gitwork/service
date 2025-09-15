@@ -11,7 +11,8 @@ from assets.views import (
     edit_asset,
     open_reports,
     print_qr_view,
-    asset_detail,  # <-- Tilføj denne til importen
+    asset_detail,
+    assign_report_to_me,
 )
 
 urlpatterns = [
@@ -31,6 +32,8 @@ urlpatterns = [
     path('report/<int:report_id>/<str:action>/', update_report_status, name='update_report_status'),
     path('assets/<int:pk>/edit/', edit_asset, name='edit_asset'),
     path('print_qr/<int:asset_id>/', print_qr_view, name='print_qr'),
+    path('assign_report/<int:report_id>/', assign_report_to_me, name='assign_report_to_me'),
+
 
     # Forside (index.html) - SKAL være sprogafhængig (for indtastning)
     path('', index, name='index'),

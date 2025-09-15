@@ -1,43 +1,93 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% block content %}
+<h1>Mine opgaver</h1>
+<p class="last-updated">Sidst opdateret: {{ last_updated|date:"d-m-Y H:i" }}</p>
 
-<header>
-    <h1>{% trans "Mine tildelte opgaver" %}</h1>
-</header>
-
-<div class="report-list">
-    {% for report in reports %}
-    <div class="report-card" data-priority="{{ report.priority }}">
-        <h2>{{ report.title }} ({{ report.get_vpid }})</h2>
-        <p><strong>{% trans "Prioritet" %}:</strong> {{ report.get_priority_display }}</p>
-        <p><strong>{% trans "Beskrivelse" %}:</strong> {{ report.description }}</p>
-        {% if report.image %}
-            <img src="{{ report.image.url }}" alt="{% trans 'Billede af fejl' %}" class="report-image">
-        {% endif %}
-        {% if report.notes %}
-            <p><strong>{% trans "Noter fra værkfører" %}:</strong> {{ report.notes }}</p>
-        {% endif %}
-
-        <div class="report-actions">
-            {% if not report.started_at %}
-                <form method="post" action="{% url 'mark_started' report.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-start">
-                        {% trans "Start arbejde" %}
-                    </button>
-                </form>
-            {% endif %}
-            {% if report.started_at and not report.completed_at %}
-                <form method="post" action="{% url 'mark_completed' report.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-complete">
-                        {% trans "Afslut opgave" %}
-                    </button>
-                </form>
-            {% endif %}
-        </div>
-    </div>
-    {% empty %}
-    <p>{% trans "Ingen tildelte opgaver." %}</p>
-    {% endfor %}
+<!-- Tildelte opgaver (øverst) -->
+<h2>Tildelte opgaver</h2>
+{% if assigned_reports %}
+<div class="reports-container">
+    <table class="reports-table">
+        <thead>
+            <tr>
+                <th style="width: 10%;">VPID</th>
+                <th style="width: 50%;">Beskrivelse</th>
+                <th style="width: 15%;">Prioritet</th>
+                <th style="width: 15%;">Indsendt</th>
+                <th style="width: 10%;">Handlinger</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in assigned_reports %}
+            <tr>
+                <td>{{ report.vpid }}</td>
+                <td>{{ report.description }}</td>
+                <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
+                    {{ report.get_priority_display }}
+                </td>
+                <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'update_report_status' report.id 'start' %}" class="button start">Start</a>
+                    <a href="{% url 'update_report_status' report.id 'complete' %}" class="button complete">Afslut</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+{% else %}
+<p>Ingen tildelte opgaver.</p>
+{% endif %}
+
+<!-- Utildelte opgaver (nedenunder) -->
+<h2>Utildelte opgaver</h2>
+{% if unassigned_reports %}
+<div class="reports-container">
+    <table class="reports-table">
+        <thead>
+            <tr>
+                <th style="width: 10%;">VPID</th>
+                <th style="width: 50%;">Beskrivelse</th>
+                <th style="width: 15%;">Prioritet</th>
+                <th style="width: 15%;">Indsendt</th>
+                <th style="width: 10%;">Handling</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in unassigned_reports %}
+            <tr>
+                <td>{{ report.vpid }}</td>
+                <td>{{ report.description }}</td>
+                <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% else %}lav{% endif %}">
+                    {{ report.get_priority_display }}
+                </td>
+                <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'assign_report_to_me' report.id %}" class="button assign">Tilknyt mig</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>Ingen utildelte opgaver.</p>
+{% endif %}
+
+<style>
+    .reports-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+    .reports-table th, .reports-table td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+    .priority-høj { color: #d32f2f; font-weight: bold; }
+    .priority-mellem { color: #ff9800; }
+    .priority-lav { color: #388e3c; }
+    .button { padding: 6px 12px; margin-right: 5px; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 500; }
+    .button.start { background-color: #4a6fa5; color: white; }
+    .button.complete { background-color: #388e3c; color: white; }
+    .button.assign { background-color: #ff9800; color: white; }
+    .last-updated { color: #555; margin-bottom: 15px; }
+</style>
+<script>
+    // Auto-refresh (hvert 60. sekund)
+    setInterval(function() { location.reload(); }, 60000);
+</script>
+{% endblock %}

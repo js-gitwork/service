@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
-from django.db.models import Case, When, Value, IntegerField, BooleanField
+from django.db.models import Case, When, Value, IntegerField
 from django.utils.translation import gettext as _
 import json
 import base64
@@ -110,11 +110,29 @@ def asset_detail(request, pk):
 
 @login_required
 def mechanic_view(request):
-    reports = FaultReport.objects.filter(
+    # Tildelte rapporter (øverst)
+    assigned_reports = FaultReport.objects.filter(
         assigned_to=request.user,
         completed_at__isnull=True
-    ).order_by('priority', '-created_at')  # Sorter efter numerisk prioritet (1=Høj, 2=Mellem, 3=Lav)
-    return render(request, 'assets/mechanic_view.html', {'reports': reports})
+    ).order_by('priority', '-created_at')
+    # Utildelte rapporter (nedenunder)
+    unassigned_reports = FaultReport.objects.filter(
+        assigned_to__isnull=True,
+        completed_at__isnull=True
+    ).order_by('priority', '-created_at')
+    return render(request, 'assets/mechanic_view.html', {
+        'assigned_reports': assigned_reports,
+        'unassigned_reports': unassigned_reports,
+        'last_updated': timezone.now(),
+    })
+
+@login_required
+def assign_report_to_me(request, report_id):
+    report = get_object_or_404(FaultReport, id=report_id)
+    report.assigned_to = request.user
+    report.save()
+    messages.success(request, f"Rapport {report.vpid} er nu tildelt dig!")
+    return redirect('mechanic_reports')
 
 @csrf_exempt
 @login_required
@@ -161,7 +179,6 @@ def open_reports(request):
         'safe_priority', # Derefter efter prioritet
         '-created_at'   # Nyeste først inden for hver gruppe
     )
-
     # Grupper efter VPID
     reports_by_vpid = {}
     for report in open_reports:
@@ -169,7 +186,6 @@ def open_reports(request):
         if vpid not in reports_by_vpid:
             reports_by_vpid[vpid] = []
         reports_by_vpid[vpid].append(report)
-
     context = {
         'reports_by_vpid': reports_by_vpid,
         'title': 'Åbne fejlrapporter (tildelte først, sorteret efter prioritet)',
