@@ -1,50 +1,28 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from assets.views import (
-    index,  # Din funktion hedder 'index', ikke 'index_view'
-    mechanic_view,
-    switch_mechanic,
-    update_report_status,
-    assign_report_to_me,
-    open_reports,
-    asset_list_api,
-    submit_report,
-    edit_asset,
-    asset_detail,
-    print_qr_view,
-)
+from django.contrib.auth.views import LogoutView
+from assets import views
 
 urlpatterns = [
-    # Admin
     path('admin/', admin.site.urls),
-
-    # Hovedside
-    path('', index, name='index'),  # Brug 'index' i stedet for 'index_view'
-
-    # Mekaniker-views
-    path('mechanic/', mechanic_view, name='mechanic_reports'), 
-    path('mechanic/switch/', switch_mechanic, name='switch_mechanic'),
-
-    # Fejlrapport-handling
-    path('reports/<int:report_id>/start/', update_report_status, name='update_report_status_start'),
-    path('reports/<int:report_id>/complete/', update_report_status, name='update_report_status_complete'),
-    path('reports/<int:report_id>/assign/', assign_report_to_me, name='assign_report_to_me'),
-
-    # Åbne fejlrapporter
-    path('open_reports/', open_reports, name='open_reports'),
-
-    # API-endpoints
-    path('api/assets/', asset_list_api, name='api_assets'),
-    path('api/reports/', submit_report, name='api_reports'),
-
-    # Redigering af aktiver
-    path('assets/<int:pk>/edit/', edit_asset, name='edit_asset'),
-    path('assets/<int:pk>/', asset_detail, name='asset_detail'),
-    path('assets/<int:asset_id>/qr/', print_qr_view, name='print_qr'),
+    path('accounts/', include('django.contrib.auth.urls')),  # Bruger din eksisterende login.html
+    path('', views.index, name='index'),
+    path('mechanic/', views.mechanic_view, name='mechanic_reports'),
+    path('mechanic/switch/', views.switch_mechanic, name='switch_mechanic'),
+    path('reports/<int:report_id>/assign/', views.assign_report_to_me, name='assign_report'),
+    path('reports/<int:report_id>/<str:action>/', views.update_report_status, name='update_report_status'),
+    path('open_reports/', views.open_reports, name='open_reports'),
+    path('api/assets/', views.asset_list_api, name='asset_list_api'),
+    path('api/reports/', views.submit_report, name='submit_report'),
+    path('assets/<int:pk>/edit/', views.edit_asset, name='edit_asset'),
+    path('assets/<int:pk>/', views.asset_detail, name='asset_detail'),
+    path('assets/<int:asset_id>/qr/', views.print_qr_view, name='print_qr'),
+    path('task/<int:report_id>/', views.mechanic_task, name='mechanic_task'),
+    path('mechanic/switch_back/', views.switch_back, name='switch_back'),
+    path('logout/', LogoutView.as_view(), name='logout'),  # Fjernet next_page='login' (vi styrer det i templaten)
 ]
 
-# Medie-filer i development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

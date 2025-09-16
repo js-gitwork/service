@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Reparationsrapport: {{ report.vpid }}</h1>
+<!-- Opgaveinfo øverst -->
+<div class="report-header">
+  <h2>Fejlmelding: {{ report.description }}</h2>
+  <p><strong>Prioritet:</strong> {% if report.priority == 1 %}Høj{% elif report.priority == 2 %}Mellem{% else %}Lav{% endif %}</p>
+  <p><strong>Indsendt:</strong> {{ report.created_at|date:"d-m-Y H:i" }}</p>
+  <p><strong>Status:</strong> {% if report.completed_at %}Afsluttet{% elif report.status == 'Paused' %}På pause{% else %}Aktiv{% endif %}</p>
+</div>
+<!-- Udstyrsliste (venstre side) og reparationsrapport (højre side) -->
+<div class="row">
+  <!-- Venstre kolonne: Udstyrsinfo -->
+  <div class="col-md-4">
+    <h3>Udstyr på aktiv</h3>
+    <ul class="equipment-list">
+      <li><strong>VPID:</strong> {{ asset.VPID }}</li>
+      <li><strong>Navn:</strong> {{ asset.name }}</li>
+      <li><strong>Beskrivelse:</strong> {{ asset.description }}</li>
+    </ul>
+    <a href="{% url 'print_qr' asset.id %}" class="btn btn-primary" target="_blank">Print QR-kode</a>
+  </div>
+  <!-- Højre kolonne: Reparationshistorik og formular -->
+  <div class="col-md-8">
+    <h3>Tidligere reparationer</h3>
+    <ul class="history-list">
+      {% for old_report in repair_history %}
+        <li>
+          <strong>{{ old_report.created_at|date:"d-m-Y" }}:</strong>
+          {{ old_report.mechanic_report|default:"Ingen rapport" }}
+        </li>
+      {% empty %}
+        <li>Ingen tidligere reparationer.</li>
+      {% endfor %}
+    </ul>
+    <!-- Formular med pålidelig JavaScript for POST -->
+    <form method="post" action="{% url 'repair_report' report.id %}" id="repairForm">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="mechanic_report">Mekanikerrapport:</label>
+        <textarea class="form-control" id="mechanic_report" name="mechanic_report" rows="5" required></textarea>
+      </div>
+      <!-- Knapper med IDs for JavaScript -->
+      <button type="button" class="btn btn-success" id="completeBtn">Afslut opgave</button>
+      <button type="button" class="btn btn-warning" id="pauseBtn">Sæt på pause</button>
+      <a href="{% url 'mechanic_reports' %}" class="btn btn-secondary">Tilbage</a>
+    </form>
+  </div>
+</div>
+
+<!-- JavaScript for at sikre POST-anmodninger -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('repairForm');
+    const completeBtn = document.getElementById('completeBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+
+    completeBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Forhindrer GET-anmodning
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'complete';
+      input.value = '1';
+      form.appendChild(input);
+      form.submit(); // Tvinger POST
+    });
+
+    pauseBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Forhindrer GET-anmodning
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'pause';
+      input.value = '1';
+      form.appendChild(input);
+      form.submit(); // Tvinger POST
+    });
+  });
+</script>
+{% endblock %}

@@ -203,3 +203,133 @@ body {
         width: 20px;
     }
 }
+/* static/css/styles.css */
+/* Reparationsrapport-specifikke stilarter */
+.report-header {
+    background: #f8f9fa;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.equipment-list {
+    list-style: none;
+    padding: 0;
+}
+
+.equipment-list li {
+    padding: 5px 0;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+}
+
+.history-list li {
+    padding: 8px;
+    background: #f8f9fa;
+    margin-bottom: 5px;
+    border-radius: 3px;
+}
+
+/* Flex-layout (hvis ikke allerede i styles.css) */
+.row {
+    display: flex;
+}
+
+.col-md-4, .col-md-8 {
+    padding: 15px;
+}
+/* ===== Mekanikeroversigt (mechanic_view.html) ===== */
+#task-list-container {
+    transition: opacity 0.3s ease-in-out;  /* Blød overgang ved opdatering */
+}
+
+/* Badges (prioritetsmærkater) */
+.badge {
+    font-size: 0.8em;
+    padding: 0.3em 0.6em;
+}
+
+/* Tabeller (opgavelister) */
+.table-responsive {
+    margin-bottom: 1rem;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 0;
+    background-color: var(--white);
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th,
+.table td {
+    padding: 0.5rem;
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Hover-effekt på opgaver */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Knapper i tabeller */
+.table .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+}
+
+/* "Sidst opdateret"-tekst */
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Animation for opdaterede rækker (valgfrit) */
+@keyframes highlight {
+    0% { background-color: rgba(255, 240, 0, 0.3); }
+    100% { background-color: transparent; }
+}
+
+.highlight-row {
+    animation: highlight 1.5s ease-in-out;
+}
+
+/* Card-styling (opgavelister) */
+.card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    padding: 0.5rem 1rem;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Responsive justeringer */
+@media (max-width: 768px) {
+    .table th,
+    .table td {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+}

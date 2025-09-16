@@ -1,0 +1,124 @@
+$ python check_db.py
+
+=== TABEL: django_migrations ===
+- id (INTEGER)
+- app (varchar(255))
+- name (varchar(255))
+- applied (datetime)
+
+=== TABEL: sqlite_sequence ===
+- name ()
+- seq ()
+
+=== TABEL: auth_group_permissions ===
+- id (INTEGER)
+- group_id (INTEGER)
+- permission_id (INTEGER)
+
+=== TABEL: auth_user_groups ===
+- id (INTEGER)
+- user_id (INTEGER)
+- group_id (INTEGER)
+
+=== TABEL: auth_user_user_permissions ===
+- id (INTEGER)
+- user_id (INTEGER)
+- permission_id (INTEGER)
+
+=== TABEL: django_admin_log ===
+- id (INTEGER)
+- object_id (TEXT)
+- object_repr (varchar(200))
+- action_flag (smallint unsigned)
+- change_message (TEXT)
+- content_type_id (INTEGER)
+- user_id (INTEGER)
+- action_time (datetime)
+
+=== TABEL: assets_category ===
+- id (INTEGER)
+- name (varchar(100))
+
+=== TABEL: assets_equipment ===
+- id (INTEGER)
+- Navn (varchar(100))
+- Beskrivelse (TEXT)
+
+=== TABEL: assets_asset ===
+- id (INTEGER)
+- VPID (varchar(100))
+- name (varchar(100))
+- description (TEXT)
+- location (varchar(100))
+- image (varchar(100))
+- qr_code (varchar(100))
+- is_active (bool)
+- last_inspection_date (date)
+- last_service_date (date)
+- in_workshop (bool)
+- workshop_from_date (date)
+- workshop_expected_return (date)
+- category_id (bigint)
+
+=== TABEL: assets_asset_equipment ===
+- id (INTEGER)
+- asset_id (bigint)
+- equipment_id (bigint)
+
+=== TABEL: assets_faultreport ===
+- id (INTEGER)
+- title (varchar(100))
+- description (TEXT)
+- original_description (TEXT)
+- sprog (varchar(2))
+- created_at (datetime)
+- updated_at (datetime)
+- status (varchar(100))
+- qr_code (varchar(100))
+- image (varchar(100))
+- repair_status (bool)
+- machine (varchar(100))
+- location (varchar(100))
+- vpid (varchar(100))
+- priority (INTEGER)
+- started_at (datetime)
+- completed_at (datetime)
+- notes (TEXT)
+- is_approved (bool)
+- asset_id (bigint)
+- assigned_to_id (INTEGER)
+- completed_by_id (INTEGER)
+
+=== TABEL: django_content_type ===
+- id (INTEGER)
+- app_label (varchar(100))
+- model (varchar(100))
+
+=== TABEL: auth_permission ===
+- id (INTEGER)
+- content_type_id (INTEGER)
+- codename (varchar(100))
+- name (varchar(255))
+
+=== TABEL: auth_group ===
+- id (INTEGER)
+- name (varchar(150))
+
+=== TABEL: auth_user ===
+- id (INTEGER)
+- password (varchar(128))
+- last_login (datetime)
+- is_superuser (bool)
+- username (varchar(150))
+- last_name (varchar(150))
+- email (varchar(254))
+- is_staff (bool)
+- is_active (bool)
+- date_joined (datetime)
+- first_name (varchar(150))
+
+=== TABEL: django_session ===
+- session_key (varchar(40))
+- session_data (TEXT)
+- expire_date (datetime)
+(service_venv) 

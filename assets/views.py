@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import models
 from django.db.models import Case, When, Value, IntegerField, Q
@@ -14,6 +14,7 @@ from .models import Asset, FaultReport
 from .forms import AssetForm
 from translator import oversæt
 from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
 
 # Hjælpefunktion til at vise prioritet som tekst
 def get_priority_display(priority):
@@ -124,70 +125,6 @@ def asset_detail(request, pk):
     return render(request, 'assets/asset_detail.html', {'asset': asset})
 
 @login_required
-def mechanic_view(request):
-    # Hent den valgte mekaniker (eller brug den aktuelle bruger)
-    mechanic_id = request.session.get('view_as_mechanic_id')
-    if not mechanic_id:  # Hvis der ikke er valgt en mekaniker, brug den aktuelle bruger
-        current_mechanic = request.user
-    else:
-        current_mechanic = get_object_or_404(User, pk=mechanic_id)
-
-    # Tildelte rapporter
-    assigned_reports = FaultReport.objects.filter(
-        assigned_to=current_mechanic,
-        completed_at__isnull=True
-    ).order_by('priority', '-created_at')
-
-    # Utildelte rapporter
-    unassigned_reports = FaultReport.objects.filter(
-        assigned_to__isnull=True,
-        completed_at__isnull=True
-    ).order_by('priority', '-created_at')
-
-    # Hent alle mekanikere (ekskl. superbrugeren selv)
-    all_mechanics = User.objects.exclude(pk=request.user.id).filter(is_staff=True)
-
-    return render(request, 'assets/mechanic_view.html', {
-        'assigned_reports': assigned_reports,
-        'unassigned_reports': unassigned_reports,
-        'last_updated': timezone.now(),
-        'current_mechanic': current_mechanic,
-        'all_mechanics': all_mechanics,
-    })
-
-@login_required
-def assign_report_to_me(request, report_id):
-    report = get_object_or_404(FaultReport, id=report_id)
-    report.assigned_to = request.user
-    report.save()
-    messages.success(request, f"Rapport {report.vpid} er nu tildelt dig!")
-    return redirect('mechanic_reports')
-
-@csrf_exempt
-@login_required
-def update_report_status(request, report_id, action):
-    report = get_object_or_404(FaultReport, id=report_id)
-    if action == 'start':
-        report.started_at = timezone.now()
-        report.save()
-        return JsonResponse({'status': 'success', 'message': 'Rapport påbegyndt'})
-    elif action == 'complete':
-        report.completed_at = timezone.now()
-        report.completed_by = request.user
-        report.repair_status = True
-        report.save()
-        return JsonResponse({'status': 'success', 'message': 'Rapport afsluttet'})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Ugyldig handling'}, status=400)
-
-@login_required
-def switch_mechanic(request):
-    if request.method == 'POST' and request.user.is_superuser:
-        mechanic_id = request.POST.get('mechanic_id')
-        if mechanic_id:
-            request.session['view_as_mechanic_id'] = mechanic_id
-    return redirect('mechanic_reports')  # <-- Brug URL-navnet, ikke stien!
-
 def open_reports(request):
     """
     Viser ALLE åbne fejlrapporter, grupperet efter VPID.
@@ -216,6 +153,7 @@ def open_reports(request):
         'safe_priority', # Derefter efter prioritet
         '-created_at'   # Nyeste først inden for hver gruppe
     )
+
     # Grupper efter VPID
     reports_by_vpid = {}
     for report in open_reports:
@@ -223,6 +161,7 @@ def open_reports(request):
         if vpid not in reports_by_vpid:
             reports_by_vpid[vpid] = []
         reports_by_vpid[vpid].append(report)
+
     context = {
         'reports_by_vpid': reports_by_vpid,
         'title': 'Åbne fejlrapporter (tildelte først, sorteret efter prioritet)',
@@ -230,6 +169,182 @@ def open_reports(request):
         'user': request.user,
     }
     return render(request, 'open_reports.html', context)
+
+
+@login_required
+def repair_report(request, report_id):
+    report = get_object_or_404(FaultReport, id=report_id)
+    asset = get_object_or_404(Asset, VPID=report.vpid)
+    repair_history = FaultReport.objects.filter(vpid=report.vpid).exclude(id=report_id).order_by('-created_at')
+
+    if request.method == 'POST':
+        # Tjek om 'complete' eller 'pause' er sendt med anmodningen
+        if 'complete' in request.POST:
+            report.completed_at = timezone.now()
+            report.completed_by = request.user
+            report.repair_status = True
+            report.mechanic_report = request.POST.get('mechanic_report', '')
+            report.status = 'Completed'  # Sørg for at sætte status til 'Completed'
+            report.save()
+            messages.success(request, f"Opgave {report.vpid} afsluttet!")
+            return redirect('mechanic_reports')
+
+        elif 'pause' in request.POST:
+            report.status = 'Paused'
+            report.save()
+            messages.info(request, f"Opgave {report.vpid} sat på pause.")
+            return redirect('mechanic_reports')
+
+        else:
+            # Hvis hverken 'complete' eller 'pause' er sendt, vis en fejl
+            messages.error(request, "Ugyldig anmodning. Prøv igen.")
+            return redirect('mechanic_task', report_id=report_id)
+
+    # Håndter GET-anmodninger (vis siden)
+    context = {
+        'report': report,
+        'asset': asset,
+        'repair_history': repair_history,
+    }
+    return render(request, 'assets/repair_report.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name='Mekaniker').exists(), login_url='/accounts/login/')
+def mechanic_view(request):
+    # Tildelte opgaver (kun for den nuværende bruger)
+    assigned_reports = FaultReport.objects.filter(
+        assigned_to=request.user,
+        completed_at__isnull=True
+    ).order_by('priority', '-created_at')
+
+    # Utildelte opgaver (ingen mekaniker tildelt)
+    unassigned_reports = FaultReport.objects.filter(
+        assigned_to__isnull=True,
+        completed_at__isnull=True
+    ).order_by('priority', '-created_at')
+
+    # Hent alle mekanikere (til dropdown)
+    all_mechanics = User.objects.filter(groups__name='Mekaniker')
+
+    return render(request, 'assets/mechanic_view.html', {
+        'assigned_reports': assigned_reports,
+        'unassigned_reports': unassigned_reports,
+        'last_updated': timezone.now(),
+        'current_mechanic': request.user,  # Kun den nuværende bruger
+        'all_mechanics': all_mechanics,
+    })
+
+
+@login_required
+def mechanic_task(request, report_id):
+    report = get_object_or_404(FaultReport, id=report_id)
+    asset = get_object_or_404(Asset, VPID=report.vpid) if report.vpid else None
+    repair_history = FaultReport.objects.filter(vpid=report.vpid).exclude(id=report_id).order_by('-created_at')
+    equipment_list = asset.equipment.all() if asset else []
+
+    # Hent mekanikere (og tving en fejl, hvis listen er tom)
+    all_mechanics = list(User.objects.filter(groups__name='Mekaniker'))
+    if not all_mechanics:
+        raise ValueError("INGEN MEKANIKERE FUNDET! Tjek om gruppen 'Mekaniker' findes og har brugere.")
+    print("DEBUG: Mekanikere sendt til template:", [u.username for u in all_mechanics])  # Skal vises i terminalen
+
+    if request.method == 'POST':
+        if 'complete' in request.POST:
+            report.mechanic_report = request.POST.get('mechanic_report', '')
+            report.completed_at = timezone.now()
+            report.completed_by = request.user
+            report.status = 'Completed'
+            report.repair_status = True
+            report.save()
+            messages.success(request, f"Opgave {report.vpid} er afsluttet!")
+            return redirect('mechanic_reports')
+        elif 'pause' in request.POST:
+            report.status = 'Paused'
+            report.save()
+            messages.info(request, f"Opgave {report.vpid} er sat på pause.")
+            return redirect('mechanic_reports')
+
+    context = {
+        'report': report,
+        'asset': asset,
+        'equipment_list': equipment_list,
+        'repair_history': repair_history,
+        'all_mechanics': all_mechanics,  # Sørg for, at denne linje er til stede
+    }
+    return render(request, 'assets/mechanic_task.html', context)
+
+
+
+@login_required
+def assign_report_to_me(request, report_id):
+    print("\n--- DEBUG assign_report_to_me ---")  # Ny linje
+    print("report_id:", report_id)               # Ny linje
+    print("POST data:", request.POST)            # Ny linje
+    print("User:", request.user)                 # Ny linje
+    try:
+        report = get_object_or_404(FaultReport, id=report_id)
+        print("Rapport fundet:", report.vpid)    # Ny linje
+        report.assigned_to = request.user
+        report.save()
+        messages.success(request, f"Rapport {report.vpid} er nu tildelt dig!")
+        return redirect('mechanic_reports')
+    except Exception as e:
+        print("FEJL:", str(e))                   # Ny linje
+        raise  # Lad fejlen bubble op
+
+@login_required
+def mechanic_task(request, report_id):
+    report = get_object_or_404(FaultReport, id=report_id)
+    all_mechanics = User.objects.filter(groups__name='Mekaniker')  # Tilføj denne linje
+    return render(request, 'assets/mechanic_task.html', {
+        'report': report,
+        'all_mechanics': all_mechanics,  # Tilføj denne linje
+    })
+
+
+@csrf_exempt
+@login_required
+def update_report_status(request, report_id, action):
+    report = get_object_or_404(FaultReport, id=report_id)
+    if action == 'start':
+        report.started_at = timezone.now()
+        report.save()
+        return JsonResponse({'status': 'success', 'message': 'Rapport påbegyndt'})
+    elif action == 'complete':
+        report.completed_at = timezone.now()
+        report.completed_by = request.user
+        report.repair_status = True
+        report.save()
+        return JsonResponse({'status': 'success', 'message': 'Rapport afsluttet'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Ugyldig handling'}, status=400
+        )
+
+@login_required
+def switch_mechanic(request):
+    if request.method == 'POST':
+        mechanic_id = request.POST.get('mechanic_id')
+        if mechanic_id:
+            logout(request)  # Log ud som nuværende bruger
+            mechanic = User.objects.get(pk=mechanic_id)
+            mechanic.backend = 'django.contrib.auth.backends.ModelBackend'  # Krævet!
+            login(request, mechanic)  # Log ind som ny mekaniker
+            messages.success(request, f"Du er nu logget ind som {mechanic.get_full_name}.")
+        return redirect('mechanic_reports')
+    return redirect('mechanic_reports')
+
+
+@login_required
+def switch_back(request):
+    if 'original_user_id' in request.session:
+        original_user = User.objects.get(pk=request.session['original_user_id'])
+        logout(request)
+        original_user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, original_user)
+        del request.session['original_user_id']  # Ryd sessionen
+        messages.success(request, f"Velkommen tilbage!")
+    return redirect('mechanic_reports')  # eller en anden standard-side
 
 @login_required
 def print_qr_view(request, asset_id):
