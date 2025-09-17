@@ -9,7 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Din lokale CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-</head>
 <body>
     <!-- MEKANIKER-SKIFT KNAP (vises kun hvis man er logget ind som en anden) -->
     {% if user.is_authenticated and original_user_id %}
@@ -30,5 +29,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

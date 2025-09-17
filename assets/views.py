@@ -210,30 +210,26 @@ def repair_report(request, report_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name='Mekaniker').exists(), login_url='/accounts/login/')
 def mechanic_view(request):
-    # Tildelte opgaver (kun for den nuværende bruger)
-    assigned_reports = FaultReport.objects.filter(
-        assigned_to=request.user,
+    # Hent åbne fejlmeldinger
+    all_reports = FaultReport.objects.filter(
         completed_at__isnull=True
-    ).order_by('priority', '-created_at')
+    ).select_related('assigned_to').order_by('priority', '-created_at')
 
-    # Utildelte opgaver (ingen mekaniker tildelt)
-    unassigned_reports = FaultReport.objects.filter(
-        assigned_to__isnull=True,
-        completed_at__isnull=True
-    ).order_by('priority', '-created_at')
-
-    # Hent alle mekanikere (til dropdown)
-    all_mechanics = User.objects.filter(groups__name='Mekaniker')
+    # Tilføj historik for hvert VPID
+    for report in all_reports:
+        report.history = FaultReport.objects.filter(
+            vpid=report.vpid,
+            completed_at__isnull=False  # Kun afsluttede opgaver
+        ).exclude(id=report.id).order_by('-completed_at')[:5]  # Sidste 5
 
     return render(request, 'assets/mechanic_view.html', {
-        'assigned_reports': assigned_reports,
-        'unassigned_reports': unassigned_reports,
+        'all_reports': all_reports,
         'last_updated': timezone.now(),
-        'current_mechanic': request.user,  # Kun den nuværende bruger
-        'all_mechanics': all_mechanics,
+        'current_mechanic': request.user,
+        'all_mechanics': User.objects.filter(groups__name='Mekaniker'),
     })
+
 
 
 @login_required

@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
+  <!-- Overskrift og bruger-menu -->
   <div class="row mb-3">
     <div class="col-md-6">
-      <h2>Mine opgaver</h2>
+      <h2>Mekanikeroversigt</h2>
     </div>
     <div class="col-md-6 text-end">
       <div class="dropdown d-inline-block">
@@ -31,12 +32,10 @@
         </ul>
       </div>
       <!-- LOG UD-KNAP -->
-      <div class="mt-2 d-inline-block">
-       <form method="post" action="{% url 'logout' %}?next={% url 'mechanic_reports' %}" class="d-inline">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-sm btn-outline-danger">Log ud</button>
+      <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger">Log ud</button>
       </form>
-      </div>
     </div>
   </div>
 
@@ -50,99 +49,64 @@
     {% endfor %}
   {% endif %}
 
-  <!-- Tildelte opgaver -->
+  <!-- ALLE OPGAVER (tildelte + utildelte) -->
   <div class="card mb-4">
     <div class="card-header">
-      <h5 class="mb-0">Tildelte opgaver ({{ assigned_reports.count }})</h5>
+      <h5 class="mb-0">Åbne opgaver ({{ all_reports.count }})</h5>
     </div>
     <div class="card-body">
-      {% if assigned_reports %}
-        <div class="table-responsive" id="assigned-tasks">
+      {% if all_reports %}
+        <div class="table-responsive" id="all-reports">
           <table class="table table-hover">
             <thead>
               <tr>
                 <th>VPID</th>
                 <th>Beskrivelse</th>
                 <th>Prioritet</th>
-                <th>Oprettet</th>
+                <th>Tildelt til</th>
                 <th>Handlinger</th>
               </tr>
             </thead>
             <tbody>
-              {% for report in assigned_reports %}
-                <tr>
-                  <td>{{ report.vpid }}</td>
-                  <td>{{ report.description|truncatechars:50 }}</td>
-                  <td>
-                    <span class="badge bg-{% if report.priority == 1 %}danger{% elif report.priority == 2 %}warning{% else %}primary{% endif %}">
-                      {{ report.get_priority_display }}
-                    </span>
-                  </td>
-                  <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
-                  <td>
-                    <a href="{% url 'mechanic_task' report.id %}" class="btn btn-primary btn-sm">Start</a>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="5" class="text-center">Ingen tildelte opgaver.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p class="text-center">Ingen tildelte opgaver.</p>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Utildelte opgaver -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-0">Utildelte opgaver ({{ unassigned_reports.count }})</h5>
-    </div>
-    <div class="card-body">
-      {% if unassigned_reports %}
-        <div class="table-responsive" id="unassigned-tasks">
-          <table class="table table-hover">
-            <thead>
+              {% for report in all_reports %}
               <tr>
-                <th>VPID</th>
-                <th>Beskrivelse</th>
-                <th>Prioritet</th>
-                <th>Oprettet</th>
-                <th>Handlinger</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for report in unassigned_reports %}
-                <tr>
-                  <td>{{ report.vpid }}</td>
-                  <td>{{ report.description|truncatechars:50 }}</td>
-                  <td>
-                    <span class="badge bg-{% if report.priority == 1 %}danger{% elif report.priority == 2 %}warning{% else %}primary{% endif %}">
-                      {{ report.get_priority_display }}
-                    </span>
-                  </td>
-                  <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
-                  <td>
+                <td>{{ report.vpid }}</td>
+                <td>{{ report.description|truncatechars:50 }}</td>
+                <td>
+                  <span class="badge bg-{% if report.priority == 1 %}danger{% elif report.priority == 2 %}warning{% else %}primary{% endif %}">
+                    {{ report.get_priority_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if report.assigned_to %}
+                    {{ report.assigned_to.get_full_name }}
+                  {% else %}
+                    <span class="text-muted">Ikke tildelt</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not report.assigned_to %}
                     <form method="post" action="{% url 'assign_report' report.id %}" style="display: inline;">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-success btn-sm">Overtag opgave</button>
                     </form>
-                  </td>
-                </tr>
+                  {% elif report.assigned_to == user %}
+                    <a href="{% url 'mechanic_task' report.id %}" class="btn btn-primary btn-sm">Start</a>
+                  {% else %}
+                    <span class="text-muted">Tildelt</span>
+                  {% endif %}
+                </td>
+              </tr>
               {% empty %}
                 <tr>
-                  <td colspan="5" class="text-center">Ingen utildelte opgaver.</td>
+                  <td colspan="5" class="text-center">Ingen åbne opgaver.</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       {% else %}
-        <p class="text-center">Ingen utildelte opgaver.</p>
+        <p class="text-center">Ingen åbne opgaver.</p>
       {% endif %}
     </div>
   </div>
@@ -164,13 +128,9 @@
       .then(html => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const newAssignedTasks = doc.getElementById('assigned-tasks');
-        const newUnassignedTasks = doc.getElementById('unassigned-tasks');
-        if (newAssignedTasks && document.getElementById('assigned-tasks')) {
-          document.getElementById('assigned-tasks').innerHTML = newAssignedTasks.innerHTML;
-        }
-        if (newUnassignedTasks && document.getElementById('unassigned-tasks')) {
-          document.getElementById('unassigned-tasks').innerHTML = newUnassignedTasks.innerHTML;
+        const newAllReports = doc.getElementById('all-reports');
+        if (newAllReports && document.getElementById('all-reports')) {
+          document.getElementById('all-reports').innerHTML = newAllReports.innerHTML;
         }
         const newLastUpdated = doc.querySelector('#last-updated');
         if (newLastUpdated) {

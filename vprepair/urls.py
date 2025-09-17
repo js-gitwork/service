@@ -4,12 +4,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
 from assets import views
+from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),  # Bruger din eksisterende login.html
     path('', views.index, name='index'),
-    path('mechanic/', views.mechanic_view, name='mechanic_reports'),
+    path('mechanic/', login_required(views.mechanic_view), name='mechanic_reports'),
     path('mechanic/switch/', views.switch_mechanic, name='switch_mechanic'),
     path('reports/<int:report_id>/assign/', views.assign_report_to_me, name='assign_report'),
     path('reports/<int:report_id>/<str:action>/', views.update_report_status, name='update_report_status'),

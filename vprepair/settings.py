@@ -110,7 +110,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# settings.py
-LOGIN_URL = '/accounts/login/'  # ← Standard login-URL (matchede path'et i urls.py)
-LOGIN_REDIRECT_URL = '/'         # Hvor brugeren sendes hen efter login
-LOGOUT_REDIRECT_URL = '/'        # Hvor brugeren sendes hen efter logout
+LOGIN_URL = '/accounts/login/'  # Standard login-URL (bruges af både admin og /mechanic/)
+LOGIN_REDIRECT_URL = '/mechanic/'  # Efter login: gå til /mechanic/ (for mekanikere)
+LOGOUT_REDIRECT_URL = '/accounts/login/'  # Efter logout: gå til login-siden
+
+# Session-indstillinger (kopier/indsæt direkte)
+SESSION_COOKIE_NAME = 'vprepair_sessionid'  # Unikt navn for din app
+SESSION_COOKIE_PATH = '/'  # Standardsti
+SESSION_SAVE_EVERY_REQUEST = True  # Forlæng sessionen ved aktivitet
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Gem sessioner i databasen
