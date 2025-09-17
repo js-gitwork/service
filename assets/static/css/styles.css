@@ -1,49 +1,73 @@
-:root {
-    --primary-color: #3f51b5;
-    --secondary-color: #ffc107;
-    --light-color: #f5f5f5;
-    --dark-color: #333;
-    --white: #ffffff;
-}
-
+/* Generel stil (oprindelig) */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--light-color);
-    color: var(--dark-color);
+    background-color: #e6f2ff;  /* Ny baggrundsfarve */
+    color: #000000;             /* Sort tekst */
     margin: 0;
     padding: 0;
+    line-height: 1.6;
 }
 
-/* Flag + kreditering */
+/* Header med flag og velkomsttekst (nye farver) */
+.language-container {
+    background-color: #003366;  /* Mørkeblå bjælke */
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.welcome-text {
+    color: #ffeb3b;             /* Gul tekst */
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+/* Flag-knapper (oprindelig størrelse, med border) */
 .language-selector {
     display: flex;
     justify-content: center;
-    padding: 10px;
-    background-color: var(--primary-color);
     gap: 10px;
+    margin-bottom: 8px;
 }
 
-.flag {
-    width: 24px;                /* Mindsket til mobil */
-    height: auto;
+.lang-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
 
+.flag-icon {
+    width: 37.5px;
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.flag-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Freepik-credit (gul tekst) */
 .credit-text {
-    text-align: center;
-    font-size: 12px;
-    color: #666;
-    margin: 5px 0;
+    color: #ffeb3b;             /* Gul tekst */
+    font-size: 0.7rem;
+    margin-top: 5px;
 }
 
 .credit-text a {
-    color: var(--primary-color);
+    color: #ffeb3b;             /* Gul tekst */
     text-decoration: none;
 }
 
-/* Søgefelt + Scan-knap (mobilvenlig) */
+/* Søgefelt (oprindelig) */
 .search-input {
     width: 95%;
-    max-width: 500px;
+    max-width: 400px;
     margin: 10px auto;
     padding: 10px;
     display: block;
@@ -52,27 +76,83 @@ body {
     font-size: 16px;
 }
 
+/* Scan QR-knap (centreret, samme bredde som søgefeltet) */
 #scan-btn {
     display: block;
-    width: 95%;
-    max-width: 500px;
-    margin: 5px auto 15px;
+    width: 95%;                 /* Samme bredde som søgefeltet */
+    max-width: 400px;           /* Samme max-width som søgefeltet */
+    margin: 5px auto 15px;      /* "auto" centrerer knappen */
     padding: 10px;
-    background-color: var(--primary-color);
-    color: var(--white);
+    background-color: #003366;  /* Mørkeblå baggrund */
+    color: #ffeb3b;             /* Gul tekst */
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
-/* Asset-liste (ALTID synlig, kompakt til mobil) */
-.asset-list-container {
+
+/* Knapper (mørkeblå baggrund, gul tekst) */
+.btn {
+    display: block;
+    width: auto;                /* Fjern fast bredde */
+    max-width: none;            /* Fjern max-width */
+    margin: 5px 5px;           /* Mindsket margin */
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    background-color: #003366;  /* Mørkeblå baggrund */
+    color: #ffeb3b;             /* Gul tekst */
+}
+
+/* Knap-gruppe (side om side) */
+.button-group {
     display: flex;
-    justify-content: center;
-    margin: 0 auto;
-    max-width: 500px;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: center;   /* Centrer knapperne */
+}
+
+.button-group .btn {
+    flex: 1;                   /* Del pladsen lige */
+    max-width: 180px;          /* Maksimal bredde for at undgå for store knapper */
+}
+
+/* Asset-liste (oprindelig) */
+.asset-list-container {
     width: 95%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.asset-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.asset-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.asset-item:hover {
+    background-color: #f5f5f5;
+}
+
+.asset-item.selected {
+    background-color: #003366;
+    color: white;
 }
 
 .asset-description {
@@ -83,46 +163,19 @@ body {
     font-style: italic;
 }
 
-.asset-list {
-    width: 100%;
-    max-height: 150px;          /* Kompakt højde til mobil */
-    overflow-y: auto;           /* Scrollbar ved behov */
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 5px;
-    background: var(--white);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: block !important;  /* Altid synlig */
-}
-
-.asset-item {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    font-size: 14px;            /* Mindre tekst */
-    white-space: nowrap;        /* Forhindr linjeskift */
-    overflow: hidden;           /* Skjul overflow */
-    text-overflow: ellipsis;    /* Prikker (...) hvis tekst er for lang */
-}
-
-.asset-item:hover {
-    background-color: #f5f5f5;
-}
-
-/* Fejlrapport-formular */
+/* Fejlrapport-formular (oprindelig bredde) */
 .report-form {
     width: 95%;
-    max-width: 500px;
-    margin: 10px auto;          /* Centreret */
-    background-color: var(--white);
-    padding: 12px;
+    max-width: 400px;
+    margin: 15px auto;
+    background: white;
+    padding: 15px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;     /* Tilføjet: Sikrer padding ikke udvider bredden */
 }
 
 .form-group {
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .form-group label {
@@ -130,206 +183,38 @@ body {
     margin-bottom: 5px;
     font-weight: bold;
     font-size: 14px;
+    color: #003366;
 }
 
 .form-control {
-    width: 100%;                /* Fylder hele forældren (.report-form) */
-    box-sizing: border-box;     /* Tilføjet: Sikrer padding ikke udvider bredden */
-    margin: 0;                  /* Fjern standard-margin */
-    padding: 10px 12px;
+    width: 100%;                /* Fylder hele forældren */
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     resize: vertical;
-    font-size: 14px;
-    display: block;             /* Tilføjet: Sikrer fuld bredde */
+    box-sizing: border-box;     /* Sikrer padding ikke udvider bredden */
 }
 
-/* Knap-gruppe */
-.button-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.button-group .btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: var(--white);
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    color: var(--dark-color);
-}
-
-/* Billede-preview */
+/* Billede-preview (oprindelig) */
 .image-preview {
-    width: 95%;
-    max-width: 500px;
+    max-width: 100%;
     margin: 10px auto;
-    display: block;
-    border-radius: 5px;
-    max-height: 200px;
-    object-fit: contain;
+    display: none;
 }
 
-/* Skjulte elementer */
 .hidden {
     display: none !important;
 }
 
 /* Mobiloptimering */
 @media (max-width: 600px) {
-    .asset-list {
-        max-height: 120px;      /* Endnu mindre på små skærme */
-        padding: 3px;
+    .language-container {
+        padding: 8px;
     }
-    .asset-item {
-        padding: 6px;
-        font-size: 13px;
+    .flag-icon {
+        width: 30px;
     }
-    .search-input, #scan-btn, .report-form, .image-preview {
-        width: 98%;
-    }
-    .flag {
-        width: 20px;
-    }
-}
-/* static/css/styles.css */
-/* Reparationsrapport-specifikke stilarter */
-.report-header {
-    background: #f8f9fa;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-
-.equipment-list {
-    list-style: none;
-    padding: 0;
-}
-
-.equipment-list li {
-    padding: 5px 0;
-}
-
-.history-list {
-    list-style: none;
-    padding: 0;
-}
-
-.history-list li {
-    padding: 8px;
-    background: #f8f9fa;
-    margin-bottom: 5px;
-    border-radius: 3px;
-}
-
-/* Flex-layout (hvis ikke allerede i styles.css) */
-.row {
-    display: flex;
-}
-
-.col-md-4, .col-md-8 {
-    padding: 15px;
-}
-/* ===== Mekanikeroversigt (mechanic_view.html) ===== */
-#task-list-container {
-    transition: opacity 0.3s ease-in-out;  /* Blød overgang ved opdatering */
-}
-
-/* Badges (prioritetsmærkater) */
-.badge {
-    font-size: 0.8em;
-    padding: 0.3em 0.6em;
-}
-
-/* Tabeller (opgavelister) */
-.table-responsive {
-    margin-bottom: 1rem;
-    overflow-x: auto;
-}
-
-.table {
-    width: 100%;
-    margin-bottom: 0;
-    background-color: var(--white);
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.table th,
-.table td {
-    padding: 0.5rem;
-    vertical-align: middle;
-    border-top: 1px solid #dee2e6;
-}
-
-.table thead th {
-    vertical-align: bottom;
-    border-bottom: 2px solid #dee2e6;
-}
-
-/* Hover-effekt på opgaver */
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transition: background-color 0.2s ease-in-out;
-}
-
-/* Knapper i tabeller */
-.table .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    margin-right: 0.3rem;
-}
-
-/* "Sidst opdateret"-tekst */
-.text-muted {
-    color: #6c757d !important;
-}
-
-/* Animation for opdaterede rækker (valgfrit) */
-@keyframes highlight {
-    0% { background-color: rgba(255, 240, 0, 0.3); }
-    100% { background-color: transparent; }
-}
-
-.highlight-row {
-    animation: highlight 1.5s ease-in-out;
-}
-
-/* Card-styling (opgavelister) */
-.card {
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    border-radius: 0.25rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1rem;
-}
-
-.card-header {
-    padding: 0.5rem 1rem;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-}
-
-/* Responsive justeringer */
-@media (max-width: 768px) {
-    .table th,
-    .table td {
-        padding: 0.4rem;
-        font-size: 0.8rem;
-    }
-
-    .btn-sm {
-        padding: 0.2rem 0.4rem;
-        font-size: 0.7rem;
+    .button-group .btn {
+        max-width: 150px;      /* Lidt smallere på mobil */
     }
 }

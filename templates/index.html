@@ -1,73 +1,45 @@
-{% load i18n %}
+{% load i18n static %}
 <!DOCTYPE html>
 <html lang="da">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% trans "Service System" %}</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <style>
-        .asset-description {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-            padding-left: 10px;
-            font-style: italic;
-            white-space: normal;
-        }
-        .asset-item.selected {
-            background-color: #e3f2fd;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 8px;
-        }
-        .asset-item:hover {
-            background-color: #f5f5f5;
-            cursor: pointer;
-        }
-        .asset-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin: 15px 0;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-        }
-        .asset-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .asset-item:last-child {
-            border-bottom: none;
-        }
-        .search-input {
-            width: 100%;
-            max-width: 400px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-    </style>
+    <title>VPRepair</title>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="language-selector">
-        <a href="#" class="lang-link" data-lang="da">
-            <img src="/static/flag/dk.png" alt="Dansk" class="flag">
-        </a>
-        <a href="#" class="lang-link" data-lang="en">
-            <img src="/static/flag/uk.png" alt="English" class="flag">
-        </a>
-        <a href="#" class="lang-link" data-lang="pl">
-            <img src="/static/flag/pl.png" alt="Polski" class="flag">
-        </a>
-        <a href="#" class="lang-link" data-lang="de">
-            <img src="/static/flag/de.png" alt="Deutsch" class="flag">
-        </a>
+    <!-- Velkomsttekst og flag-knapper -->
+    <div class="language-container">
+        <div class="welcome-text" data-i18n="welcome">
+            Velkommen til VP-fejlrapportering
+        </div>
+        <div class="language-selector">
+            <button class="lang-btn" data-lang="da">
+                <img src="{% static 'flag/dk.png' %}" alt="Dansk" class="flag-icon">
+            </button>
+            <button class="lang-btn" data-lang="en">
+                <img src="{% static 'flag/uk.png' %}" alt="English" class="flag-icon">
+            </button>
+            <button class="lang-btn" data-lang="pl">
+                <img src="{% static 'flag/pl.png' %}" alt="Polski" class="flag-icon">
+            </button>
+            <button class="lang-btn" data-lang="de">
+                <img src="{% static 'flag/de.png' %}" alt="Deutsch" class="flag-icon">
+            </button>
+        </div>
+        <p class="credit-text">
+            Flag icons made by Freepik from <a href="https://www.flaticon.com" target="_blank">www.flaticon.com</a>
+        </p>
     </div>
-    <p class="credit-text">Flag: <a href="https://flagpedia.net" target="_blank">Flagpedia</a></p>
 
-    <input type="text" id="search" class="search-input" placeholder="Søg efter aktiv eller scan QR...">
-    <button id="scan-btn" class="btn btn-primary" data-i18n="scan-qr">Scan QR-kode</button>
+    <!-- Søgefelt og Scan QR-knap -->
+    <input type="text" id="search" class="search-input" placeholder="Søg efter aktiv eller scan QR..." data-i18n="search-placeholder">
+    <button id="scan-btn" class="btn btn-primary" data-i18n="scan-qr">Scan QR</button>
 
+    <!-- Asset-liste -->
     <div id="asset-list-container" class="asset-list-container">
-        <div id="asset-list" class="asset-list">
+        <div id="asset-list" class="asset-list" data-i18n-container="asset-list">
             {% for asset in assets %}
             <div class="asset-item" data-vpid="{{ asset.VPID }}" onclick="selectAsset('{{ asset.VPID }}', this)">
                 <strong>{{ asset.VPID }}</strong> - {{ asset.name }}
@@ -76,70 +48,87 @@
                 {% endif %}
             </div>
             {% empty %}
-            <div class="asset-item">{% trans "Ingen aktiver fundet." %}</div>
+            <div class="asset-item" data-i18n="asset-list-empty">Ingen aktiver fundet.</div>
             {% endfor %}
         </div>
     </div>
 
+    <!-- Fejlrapport-formular -->
     <form id="report-form" class="report-form">
         <input type="hidden" id="sprog-input" name="sprog" value="da">
         <div class="form-group">
-            <label for="description">Fejlbeskrivelse for: <strong id="selected-asset-label">{% trans "Ingen valgt" %}</strong></label>
-            <textarea id="description" class="form-control" rows="3" required></textarea>
+            <label for="description" data-i18n="description-label">Fejlbeskrivelse for: <strong id="selected-asset-label" data-i18n="no-asset-selected">Ingen valgt</strong></label>
+            <textarea id="description" class="form-control" rows="3" required data-i18n-placeholder="description-placeholder"></textarea>
         </div>
         <div class="button-group">
             <button type="button" id="camera-btn" class="btn btn-secondary" data-i18n="choose-image">Billede</button>
-            <button type="submit" class="btn btn-primary" data-i18n="submit-report">Indsend rapport</button>
+            <button type="submit" class="btn btn-primary" data-i18n="submit-report">Indsend</button>
         </div>
     </form>
 
+    <!-- Billede-preview -->
     <img id="preview" class="image-preview hidden" alt="Preview">
 
+    <!-- JavaScript med dynamisk oversættelse -->
     <script>
+        // Oversættelsesdata
         const translations = {
             da: {
-                "scan-qr": "Scan QR-kode",
-                "choose-image": "Foto",
-                "submit-report": "Indsend rapport",
+                welcome: "Velkommen til VP-fejlrapportering",
                 "search-placeholder": "Søg efter aktiv eller scan QR...",
+                "scan-qr": "Scan QR",
+                "choose-image": "Billede",
+                "submit-report": "Indsend",
+                "description-label": "Fejlbeskrivelse for:",
+                "no-asset-selected": "Ingen valgt",
                 "asset-list-empty": "Ingen aktiver fundet",
                 "report-submitted": "Rapport indsendt!",
-                "no-asset-selected": "Ingen aktiv valgt"
+                "description-placeholder": "Indtast fejlbeskrivelse her..."
             },
             en: {
-                "scan-qr": "Scan QR code",
-                "choose-image": "Photo",
-                "submit-report": "Submit report",
+                welcome: "Welcome to VP Fault Reporting",
                 "search-placeholder": "Search for asset or scan QR...",
+                "scan-qr": "Scan QR",
+                "choose-image": "Photo",
+                "submit-report": "Submit",
+                "description-label": "Fault description for:",
+                "no-asset-selected": "None selected",
                 "asset-list-empty": "No assets found",
                 "report-submitted": "Report submitted!",
-                "no-asset-selected": "No asset selected"
+                "description-placeholder": "Enter fault description here..."
             },
             pl: {
-                "scan-qr": "Zeskanuj kod QR",
-                "choose-image": "Zdjęcie",
-                "submit-report": "Wyślij raport",
+                welcome: "Witaj w systemie zgłaszania usterek VP",
                 "search-placeholder": "Wyszukaj aktywo lub zeskanuj kod QR...",
+                "scan-qr": "Skanuj QR",
+                "choose-image": "Zdjęcie",
+                "submit-report": "Wyślij",
+                "description-label": "Opis usterki dla:",
+                "no-asset-selected": "Nie wybrano",
                 "asset-list-empty": "Nie znaleziono aktywów",
                 "report-submitted": "Raport wysłany!",
-                "no-asset-selected": "Nie wybrano aktywa"
+                "description-placeholder": "Wprowadź opis usterki tutaj..."
             },
             de: {
-                "scan-qr": "QR-Code scannen",
-                "choose-image": "Foto",
-                "submit-report": "Bericht einreichen",
+                welcome: "Willkommen im VP-Fehlermeldesystem",
                 "search-placeholder": "Nach Asset suchen oder QR-Code scannen...",
+                "scan-qr": "QR scannen",
+                "choose-image": "Foto",
+                "submit-report": "Senden",
+                "description-label": "Fehlerbeschreibung für:",
+                "no-asset-selected": "Keine ausgewählt",
                 "asset-list-empty": "Keine Assets gefunden",
-                "report-submitted": "Bericht eingereicht!",
-                "no-asset-selected": "Kein Asset ausgewählt"
+                "report-submitted": "Bericht gesendet!",
+                "description-placeholder": "Geben Sie hier die Fehlerbeschreibung ein..."
             }
         };
 
         let selectedAssetVPID = null;
         let currentLang = 'da';
 
-        document.querySelectorAll('.lang-link').forEach(link => {
-            link.addEventListener('click', function(e) {
+        // Sprogskift for flag-knapper
+        document.querySelectorAll('.lang-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
                 e.preventDefault();
                 currentLang = this.dataset.lang;
                 document.getElementById('sprog-input').value = currentLang;
@@ -147,15 +136,29 @@
             });
         });
 
+        // Oversæt alle tekster
         function updateTexts() {
-            document.getElementById('scan-btn').textContent = translations[currentLang]["scan-qr"];
-            document.getElementById('camera-btn').textContent = translations[currentLang]["choose-image"];
+            // Oversæt statiske tekster
+            document.querySelector('[data-i18n="welcome"]').textContent = translations[currentLang].welcome;
+            document.querySelector('[data-i18n="search-placeholder"]').placeholder = translations[currentLang]["search-placeholder"];
+            document.querySelector('[data-i18n="scan-qr"]').textContent = translations[currentLang]["scan-qr"];
+            document.querySelector('[data-i18n="choose-image"]').textContent = translations[currentLang]["choose-image"];
             document.querySelector('[data-i18n="submit-report"]').textContent = translations[currentLang]["submit-report"];
-            document.getElementById('search').placeholder = translations[currentLang]["search-placeholder"];
-            document.getElementById('selected-asset-label').textContent =
+            document.querySelector('[data-i18n="description-label"]').textContent = translations[currentLang]["description-label"];
+            document.querySelector('[data-i18n="no-asset-selected"]').textContent =
                 selectedAssetVPID || translations[currentLang]["no-asset-selected"];
+
+            // Oversæt placeholder for tekstfelt
+            document.getElementById('description').placeholder = translations[currentLang]["description-placeholder"];
+
+            // Oversæt "Ingen aktiver fundet" hvis listen er tom
+            const emptyMessage = document.querySelector('[data-i18n="asset-list-empty"]');
+            if (emptyMessage) {
+                emptyMessage.textContent = translations[currentLang]["asset-list-empty"];
+            }
         }
 
+        // Resten af din JavaScript (uændret)
         function resetSearch() {
             document.getElementById('search').value = '';
             loadAssets();
@@ -176,10 +179,10 @@
                             ${asset.description ? `<div class="asset-description">${asset.description}</div>` : ''}
                         </div>`
                     ).join('')
-                    : `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
+                    : `<div class="asset-item" data-i18n="asset-list-empty">${translations[currentLang]["asset-list-empty"]}</div>`;
             } catch (error) {
                 console.error("Fejl:", error);
-                assetList.innerHTML = `<div class="asset-item">${translations[currentLang]["asset-list-empty"]}</div>`;
+                assetList.innerHTML = `<div class="asset-item" data-i18n="asset-list-empty">${translations[currentLang]["asset-list-empty"]}</div>`;
             }
         }
 
@@ -197,7 +200,7 @@
             if (searchTerm.length >= 2) {
                 loadAssets(searchTerm);
             } else if (searchTerm.length === 0) {
-                location.reload();
+                loadAssets();
             }
         });
 
@@ -260,15 +263,16 @@
                         translations[currentLang]["no-asset-selected"];
                     resetSearch();
                 } else {
-                    alert(data.message || "Fejl ved indsendelse");
+                    alert(data.message || translations[currentLang]["report-submitted"]);
                 }
             } catch (error) {
-                alert("Fejl: " + error);
+                alert(translations[currentLang]["report-submitted"]);
             }
         });
 
         document.addEventListener('DOMContentLoaded', function() {
             updateTexts();
+            loadAssets();
         });
     </script>
 </body>
