@@ -1,0 +1,144 @@
+/* Generel typografi og layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Overskrifter og brødtekst */
+h1 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.last-updated {
+    color: #555;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+#update-status {
+    color: #388e3c;
+    font-weight: bold;
+}
+
+/* Container til rapporter */
+#reports-container {
+    margin-top: 10px;
+}
+
+.vpid-group {
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Tabel-styling */
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed;
+}
+
+.reports-table th,
+.reports-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: top;
+}
+
+.reports-table tr {
+    height: 50px; /* Fast højde for rækker */
+}
+
+.reports-table th {
+    background-color: #4a6fa5;
+    color: white;
+    padding: 10px 12px;
+    font-weight: 600;
+}
+
+.reports-table th:nth-child(1),
+.reports-table td:nth-child(1) {
+    width: 10%; /* VPID */
+}
+
+.reports-table th:nth-child(2),
+.reports-table td:nth-child(2) {
+    width: 35%; /* Beskrivelse */
+}
+
+.reports-table th:nth-child(3),
+.reports-table td:nth-child(3) {
+    width: 12%; /* Billede */
+}
+
+.reports-table th:nth-child(4),
+.reports-table td:nth-child(4) {
+    width: 10%; /* Prioritet */
+}
+
+.reports-table th:nth-child(5),
+.reports-table td:nth-child(5) {
+    width: 18%; /* Mekaniker */
+}
+
+.reports-table th:nth-child(6),
+.reports-table td:nth-child(6) {
+    width: 15%; /* Indsendt */
+}
+
+/* Prioritetsfarver */
+.priority-høj {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.priority-mellem {
+    color: #ff9800;
+}
+
+.priority-lav {
+    color: #388e3c;
+}
+
+.priority-ukendt {
+    color: #7b1fa2;
+    font-style: italic;
+}
+
+/* Mekaniker og ingen billede */
+.unassigned {
+    color: #9e9e9e;
+    font-style: italic;
+}
+
+.no-image {
+    color: #9e9e9e;
+    font-size: 12px;
+}
+
+/* Billede-styling */
+.fault-thumbnail {
+    max-width: 100px;
+    max-height: 36px; /* Begrænser højden til rækkehøjden */
+    vertical-align: middle;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+/* Tomt indhold */
+.empty-message {
+    text-align: center;
+    color: #9e9e9e;
+    padding: 20px;
+}

@@ -8,13 +8,12 @@
 <div id="reports-container">
     {% for vpid, reports in reports_by_vpid.items %}
     <div class="vpid-group">
-        <h2>Aktiv: {{ vpid }}</h2>
         <table class="reports-table">
             <thead>
                 <tr>
                     <th>VPID</th>
                     <th>Beskrivelse</th>
-                    <th>Billede</th>
+                    <th>Forventet værksted</th>  <!-- Erstatter "Billede" -->
                     <th>Prioritet</th>
                     <th>Mekaniker</th>
                     <th>Værksted-status</th>
@@ -27,10 +26,26 @@
                     <td>{{ report.vpid }}</td>
                     <td>{{ report.description }}</td>
                     <td>
-                        {% if report.image %}
-                            <img src="{{ report.image.url }}" alt="Fejlrapport-billede" style="max-width: 100px; max-height: 100px; border-radius: 4px;">
+                        {% if report.expected_workshop_date %}
+                            {% now "Y-m-d H:i:s" as current_datetime %}
+                            {% if report.expected_workshop_date|date:"Y-m-d H:i:s" < current_datetime %}
+                                <span class="workshop-date overdue" title="Forsinket!">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {{ report.expected_workshop_date|date:"d-m-Y H:i" }}
+                                </span>
+                            {% elif report.expected_workshop_date|date:"Y-m-d" == current_datetime|slice:":10" %}
+                                <span class="workshop-date today" title="I dag!">
+                                    <i class="bi bi-calendar-event"></i>
+                                    {{ report.expected_workshop_date|date:"H:i" }}
+                                </span>
+                            {% else %}
+                                <span class="workshop-date future" title="Planlagt">
+                                    <i class="bi bi-calendar-check"></i>
+                                    {{ report.expected_workshop_date|date:"d-m-Y H:i" }}
+                                </span>
+                            {% endif %}
                         {% else %}
-                            <span class="no-image">Ingen</span>
+                            <span class="no-workshop-date">Ikke aftalt</span>
                         {% endif %}
                     </td>
                     <td class="priority-{% if report.priority == 1 %}høj{% elif report.priority == 2 %}mellem{% elif report.priority == 3 %}lav{% else %}ukendt{% endif %}">
@@ -47,11 +62,10 @@
                         {% else %}
                         <span style="color: #388e3c;">Ikke på værksted</span>
                         {% endif %}
-    {% else %}
-        <span style="color: #9e9e9e;">Ukendt aktiv</span>
-    {% endif %}
-{% endwith %}
-
+                        {% else %}
+                        <span style="color: #9e9e9e;">Ukendt aktiv</span>
+                        {% endif %}
+                        {% endwith %}
                     </td>
                     <td>{{ report.created_at|date:"d-m-Y H:i" }}</td>
                 </tr>
@@ -72,28 +86,96 @@
         vertical-align: top;
     }
     .reports-table th:nth-child(1), .reports-table td:nth-child(1) { width: 8%; }   /* VPID */
-    .reports-table th:nth-child(2), .reports-table td:nth-child(2) { width: 30%; }  /* Beskrivelse */
-    .reports-table th:nth-child(3), .reports-table td:nth-child(3) { width: 12%; }  /* Billede */
+    .reports-table th:nth-child(2), .reports-table td:nth-child(2) { width: 35%; }  /* Beskrivelse (udvidet) */
+    .reports-table th:nth-child(3), .reports-table td:nth-child(3) { width: 15%; }  /* Forventet værksted */
     .reports-table th:nth-child(4), .reports-table td:nth-child(4) { width: 10%; }  /* Prioritet */
-    .reports-table th:nth-child(5), .reports-table td:nth-child(5) { width: 15%; }  /* Mekaniker */
-    .reports-table th:nth-child(6), .reports-table td:nth-child(6) { width: 18%; }  /* Værksted-status */
-    .reports-table th:nth-child(7), .reports-table td:nth-child(7) { width: 12%; }  /* Indsendt */
+    .reports-table th:nth-child(5), .reports-table td:nth-child(5) { width: 12%; }  /* Mekaniker */
+    .reports-table th:nth-child(6), .reports-table td:nth-child(6) { width: 15%; }  /* Værksted-status */
+    .reports-table th:nth-child(7), .reports-table td:nth-child(7) { width: 10%; }  /* Indsendt */
+
+    /* Værkstedsdato-styling */
+    .workshop-date {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+    .workshop-date.overdue {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    .workshop-date.today {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+    .workshop-date.future {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    .no-workshop-date {
+        color: #9e9e9e;
+        font-size: 12px;
+        font-style: italic;
+    }
+
     /* Resten af din CSS */
-    .vpid-group { margin-bottom: 30px; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .reports-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-    .reports-table th { background-color: #4a6fa5; color: white; padding: 10px 12px; font-weight: 600; }
-    .priority-høj { color: #d32f2f; font-weight: bold; }
-    .priority-mellem { color: #ff9800; }
-    .priority-lav { color: #388e3c; }
-    .priority-ukendt { color: #7b1fa2; font-style: italic; }
-    .unassigned { color: #9e9e9e; font-style: italic; }
-    .no-image { color: #9e9e9e; font-size: 12px; }
-    .last-updated { color: #555; margin-bottom: 15px; }
-    #update-status { color: #388e3c; font-weight: bold; }
-    /* Billede-styling */
-    .reports-table img { border: 1px solid #eee; border-radius: 4px; }
+    .vpid-group {
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        table-layout: fixed;
+    }
+    .reports-table th {
+        background-color: #4a6fa5;
+        color: white;
+        padding: 10px 12px;
+        font-weight: 600;
+    }
+    .priority-høj {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+    .priority-mellem {
+        color: #ff9800;
+    }
+    .priority-lav {
+        color: #388e3c;
+    }
+    .priority-ukendt {
+        color: #7b1fa2;
+        font-style: italic;
+    }
+    .unassigned {
+        color: #9e9e9e;
+        font-style: italic;
+    }
+    .last-updated {
+        color: #555;
+        margin-bottom: 15px;
+    }
+    #update-status {
+        color: #388e3c;
+        font-weight: bold;
+    }
 </style>
 <script>
+    // Tilføj Bootstrap Icons (hvis ikke allerede loadet)
+    function loadBootstrapIcons() {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css';
+        document.head.appendChild(link);
+    }
+    loadBootstrapIcons();
+
     function refreshReports() {
         document.getElementById('update-status').textContent = " (opdaterer...)";
         fetch(window.location.href)
@@ -104,12 +186,15 @@
                 document.getElementById('reports-container').innerHTML = doc.getElementById('reports-container').innerHTML;
                 document.getElementById('update-time').textContent = doc.getElementById('update-time').textContent;
                 document.getElementById('update-status').textContent = " ✓";
+                loadBootstrapIcons();  // Genindlæs ikoner efter opdatering
             })
             .catch(error => {
                 document.getElementById('update-status').textContent = " (fejl)";
                 console.error("Opdateringsfejl:", error);
             });
     }
-    window.onload = function() { setInterval(refreshReports, 60000); };
+    window.onload = function() {
+        setInterval(refreshReports, 60000);
+    };
 </script>
 {% endblock %}

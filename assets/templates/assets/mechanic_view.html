@@ -1,165 +1,363 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  {% if user.is_authenticated %}
-  <div class="row mb-3">
-    <div class="col-12">
-      <div class="card text-white bg-primary">
-        <div class="card-body text-center">
-          <h5 class="mb-0">
-            <i class="bi bi-person-circle"></i>
-            {{ user.get_full_name|default:user.username }}
-          </h5>
+{% load static %}
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if user.is_authenticated %}
+            {{ user.get_full_name }} | VPRepair
+        {% else %}
+            VPRepair
+        {% endif %}
+    </title>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .header {
+            background-color: #003366;
+            color: #ffeb3b;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown {
+            width: 200px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 10px;
+            height: 36px;
+            cursor: pointer;
+        }
+        .btn {
+            background-color: #003366;
+            color: #ffeb3b;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 36px;
+            display: inline-block;
+            width: auto;
+            text-align: center;
+        }
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .task-table th, .task-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .task-table th {
+            background-color: #003366;
+            color: #ffeb3b;
+        }
+        .task-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .assigned-to-me {
+            background-color: #e6f7ff;
+        }
+        .unassigned {
+            background-color: #fff9e6;
+        }
+        .assigned-to-others {
+            background-color: #f9f9f9;
+        }
+        .thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .group-separator {
+            height: 10px;
+            background-color: #003366;
+        }
+        .group-separator td {
+            padding: 0;
+            border: none;
+        }
+        .messages {
+            margin: 10px 20px;
+            padding: 10px;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .workshop-date {
+            font-weight: bold;
+        }
+        .date-overdue {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        .date-soon {
+            color: #ffc107;
+            background-color: #fff3cd;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        .date-future {
+            color: #28a745;
+            background-color: #d4edda;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        .priority-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .priority-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .priority-low {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
-      </div>
-    </div>
-  </div>
-{% endif %}
+    {% endif %}
 
-  <!-- Overskrift og bruger-menu -->
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <h2>Mekanikeroversigt</h2>
+    <div class="header">
+        <div style="color: #ffeb3b; font-size: 1.2rem; font-weight: bold;">
+            Ventende opgaver <i class="bi bi-sort-down"></i> (sorteret efter værkstedsdato)
+        </div>
+        <form id="switch-mechanic-form" method="post" action="{% url 'switch_mechanic' %}">
+            {% csrf_token %}
+            <input type="hidden" id="selected-mechanic-id" name="mechanic_id" value="">
+            <select class="dropdown" id="mechanic-select" onchange="document.getElementById('selected-mechanic-id').value = this.value; this.form.submit();">
+                {% for mechanic in all_mechanics %}
+                    <option value="{{ mechanic.id }}" {% if mechanic.id == user.id %}selected{% endif %}>
+                        {{ mechanic.get_full_name|default:mechanic.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn">Log ud</button>
+        </form>
     </div>
-    <div class="col-md-6 text-end">
-      <div class="dropdown d-inline-block">
-        <button class="btn btn-secondary dropdown-toggle"
-                type="button"
-                id="mechanicDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-          {{ user.get_full_name }}
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          {% for mechanic in all_mechanics %}
-            <li>
-              <form method="post" action="{% url 'switch_mechanic' %}" class="m-0 p-0">
-                {% csrf_token %}
-                <input type="hidden" name="mechanic_id" value="{{ mechanic.id }}">
-                <button type="submit" class="dropdown-item">
-                  {{ mechanic.get_full_name|default:mechanic.username }}
-                </button>
-              </form>
-            </li>
-          {% empty %}
-            <li><span class="dropdown-item text-muted">Ingen mekanikere fundet</span></li>
-          {% endfor %}
-        </ul>
-      </div>
-      <!-- LOG UD-KNAP -->
-      <form method="post" action="{% url 'logout' %}" class="d-inline ms-2">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-danger">Log ud</button>
-      </form>
-    </div>
-  </div>
 
-  <!-- Beskeder -->
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
-
-  <!-- ALLE OPGAVER (tildelte + utildelte) -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-0">Åbne opgaver ({{ all_reports.count }})</h5>
-    </div>
-    <div class="card-body">
-      {% if all_reports %}
-        <div class="table-responsive" id="all-reports">
-          <table class="table table-hover">
+    <div style="padding: 20px;">
+        <table class="task-table">
             <thead>
-              <tr>
-                <th>VPID</th>
-                <th>Beskrivelse</th>
-                <th>Prioritet</th>
-                <th>Tildelt til</th>
-                <th>Handlinger</th>
-              </tr>
+                <tr>
+                    <th>VPID</th>
+                    <th>Værksted</th>
+                    <th>Billede</th>
+                    <th>Beskrivelse</th>
+                    <th>Prioritet</th>
+                    <th>Status</th>
+                    <th>Mekaniker</th>
+                    <th>Handlinger</th>
+                </tr>
             </thead>
             <tbody>
-              {% for report in all_reports %}
-              <tr>
-                <td>{{ report.vpid }}</td>
-                <td>{{ report.description|truncatechars:50 }}</td>
-                <td>
-                  <span class="badge bg-{% if report.priority == 1 %}danger{% elif report.priority == 2 %}warning{% else %}primary{% endif %}">
-                    {{ report.get_priority_display }}
-                  </span>
-                </td>
-                <td>
-                  {% if report.assigned_to %}
-                    {{ report.assigned_to.get_full_name }}
-                  {% else %}
-                    <span class="text-muted">Ikke tildelt</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if not report.assigned_to %}
-                    <form method="post" action="{% url 'assign_report' report.id %}" style="display: inline;">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-success btn-sm">Overtag opgave</button>
-                    </form>
-                  {% elif report.assigned_to == user %}
-                    <a href="{% url 'mechanic_task' report.id %}" class="btn btn-primary btn-sm">Start</a>
-                  {% else %}
-                    <span class="text-muted">Tildelt</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="5" class="text-center">Ingen åbne opgaver.</td>
-                </tr>
-              {% endfor %}
+                {# Tildelt til mig #}
+                {% for report in reports %}
+                    {% if report.assigned_to == user %}
+                        {% if not forloop.first and not loop.first %}
+                            <tr class="group-separator">
+                                <td colspan="8"></td>
+                            </tr>
+                        {% endif %}
+                        <tr class="assigned-to-me">
+                            <td>{{ report.vpid }}</td>
+                            <td class="workshop-date">
+                                {% if report.expected_workshop_date %}
+                                    {% now "Y-m-d H:i:s" as current_datetime %}
+                                    {% if report.expected_workshop_date|date:"Y-m-d H:i:s" < current_datetime %}
+                                        <span class="date-overdue" title="Forsinket!">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% elif report.expected_workshop_date|date:"Y-m-d" == current_datetime|slice:":10" %}
+                                        <span class="date-soon" title="I dag!">
+                                            <i class="bi bi-calendar-event"></i>
+                                            {{ report.expected_workshop_date|date:"H:i" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="date-future" title="Planlagt">
+                                            <i class="bi bi-calendar-check"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Ikke aftalt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.image %}
+                                    <img src="{{ report.image.url }}" alt="Billede" class="thumbnail">
+                                {% else %}
+                                    Ingen
+                                {% endif %}
+                            </td>
+                            <td>{{ report.description|truncatechars:50 }}</td>
+                            <td class="priority-{% if report.priority == 1 %}high{% elif report.priority == 2 %}medium{% else %}low{% endif %}">
+                                {{ report.get_priority_display }}
+                            </td>
+                            <td>{{ report.get_status_display }}</td>
+                            <td>{{ report.assigned_to.get_full_name|default:report.assigned_to.username }}</td>
+                            <td>
+                                <div style="white-space: nowrap;">
+                                    <a href="{% url 'start_task' report.id %}" class="btn" style="margin-right: 5px;">Start</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+
+                {# Ikke tildelt #}
+                {% for report in reports %}
+                    {% if report.assigned_to == None %}
+                        {% if not forloop.first %}
+                            <tr class="group-separator">
+                                <td colspan="8"></td>
+                            </tr>
+                        {% endif %}
+                        <tr class="unassigned">
+                            <td>{{ report.vpid }}</td>
+                            <td class="workshop-date">
+                                {% if report.expected_workshop_date %}
+                                    {% now "Y-m-d H:i:s" as current_datetime %}
+                                    {% if report.expected_workshop_date|date:"Y-m-d H:i:s" < current_datetime %}
+                                        <span class="date-overdue" title="Forsinket!">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% elif report.expected_workshop_date|date:"Y-m-d" == current_datetime|slice:":10" %}
+                                        <span class="date-soon" title="I dag!">
+                                            <i class="bi bi-calendar-event"></i>
+                                            {{ report.expected_workshop_date|date:"H:i" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="date-future" title="Planlagt">
+                                            <i class="bi bi-calendar-check"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Ikke aftalt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.image %}
+                                    <img src="{{ report.image.url }}" alt="Billede" class="thumbnail">
+                                {% else %}
+                                    Ingen
+                                {% endif %}
+                            </td>
+                            <td>{{ report.description|truncatechars:50 }}</td>
+                            <td class="priority-{% if report.priority == 1 %}high{% elif report.priority == 2 %}medium{% else %}low{% endif %}">
+                                {{ report.get_priority_display }}
+                            </td>
+                            <td>{{ report.get_status_display }}</td>
+                            <td>Ikke tildelt</td>
+                            <td>
+                                <div style="white-space: nowrap;">
+                                    <a href="{% url 'assign_task' report.id %}" class="btn" style="margin-right: 5px;">Pluk</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+
+                {# Tildelt til andre #}
+                {% for report in reports %}
+                    {% if report.assigned_to and report.assigned_to != user %}
+                        {% if not forloop.first %}
+                            <tr class="group-separator">
+                                <td colspan="8"></td>
+                            </tr>
+                        {% endif %}
+                        <tr class="assigned-to-others">
+                            <td>{{ report.vpid }}</td>
+                            <td class="workshop-date">
+                                {% if report.expected_workshop_date %}
+                                    {% now "Y-m-d H:i:s" as current_datetime %}
+                                    {% if report.expected_workshop_date|date:"Y-m-d H:i:s" < current_datetime %}
+                                        <span class="date-overdue" title="Forsinket!">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% elif report.expected_workshop_date|date:"Y-m-d" == current_datetime|slice:":10" %}
+                                        <span class="date-soon" title="I dag!">
+                                            <i class="bi bi-calendar-event"></i>
+                                            {{ report.expected_workshop_date|date:"H:i" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="date-future" title="Planlagt">
+                                            <i class="bi bi-calendar-check"></i>
+                                            {{ report.expected_workshop_date|date:"d-m H:i" }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Ikke aftalt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.image %}
+                                    <img src="{{ report.image.url }}" alt="Billede" class="thumbnail">
+                                {% else %}
+                                    Ingen
+                                {% endif %}
+                            </td>
+                            <td>{{ report.description|truncatechars:50 }}</td>
+                            <td class="priority-{% if report.priority == 1 %}high{% elif report.priority == 2 %}medium{% else %}low{% endif %}">
+                                {{ report.get_priority_display }}
+                            </td>
+                            <td>{{ report.get_status_display }}</td>
+                            <td>{{ report.assigned_to.get_full_name|default:report.assigned_to.username }}</td>
+                            <td>
+                                <div style="white-space: nowrap;">
+                                    <a href="{% url 'take_over_task' report.id %}" class="btn" style="margin-right: 5px;">Overtag</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+
+                {% if reports|length == 0 %}
+                    <tr>
+                        <td colspan="8">Ingen opgaver fundet.</td>
+                    </tr>
+                {% endif %}
             </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p class="text-center">Ingen åbne opgaver.</p>
-      {% endif %}
+        </table>
     </div>
-  </div>
-
-  <!-- Sidst opdateret -->
-  <div class="text-end text-muted">
-    <small>Sidst opdateret: <span id="last-updated">{{ last_updated|date:"d-m-Y H:i" }}</span></small>
-  </div>
-</div>
-
-<!-- Auto-opdatering -->
-<script>
-  function updateTaskList() {
-    fetch(window.location.href)
-      .then(response => {
-        if (!response.ok) throw new Error("Serverfejl: " + response.status);
-        return response.text();
-      })
-      .then(html => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const newAllReports = doc.getElementById('all-reports');
-        if (newAllReports && document.getElementById('all-reports')) {
-          document.getElementById('all-reports').innerHTML = newAllReports.innerHTML;
-        }
-        const newLastUpdated = doc.querySelector('#last-updated');
-        if (newLastUpdated) {
-          document.getElementById('last-updated').textContent = newLastUpdated.textContent;
-        }
-      })
-      .catch(error => {
-        console.error("Opdatering mislykkedes:", error);
-        setTimeout(updateTaskList, 10000);
-      });
-  }
-  document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(updateTaskList, 5000);
-    setInterval(updateTaskList, 30000);
-  });
-</script>
-{% endblock %}
+</body>
+</html>

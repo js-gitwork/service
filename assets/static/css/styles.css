@@ -1,7 +1,7 @@
 /* Generel stil (oprindelig) */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #e6f2ff;  /* Ny baggrundsfarve */
+    background-color: #e6f2ff;  /* Lys blå baggrund */
     color: #000000;             /* Sort tekst */
     margin: 0;
     padding: 0;
@@ -91,13 +91,12 @@ body {
     font-size: 1rem;
 }
 
-
 /* Knapper (mørkeblå baggrund, gul tekst) */
 .btn {
     display: block;
     width: auto;                /* Fjern fast bredde */
     max-width: none;            /* Fjern max-width */
-    margin: 5px 5px;           /* Mindsket margin */
+    margin: 5px 5px;            /* Mindsket margin */
     padding: 10px;
     border: none;
     border-radius: 5px;

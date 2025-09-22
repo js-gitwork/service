@@ -12,8 +12,8 @@ class Category(models.Model):
         verbose_name_plural = _("Kategorier")
 
 class Equipment(models.Model):
-    Navn = models.CharField(max_length=100, verbose_name=_("Udstyrsnavn"))  # Ændret fra 'name' til 'Navn'
-    Beskrivelse = models.TextField(blank=True, verbose_name=_("Beskrivelse"))  # Ændret fra 'description' til 'Beskrivelse'
+    Navn = models.CharField(max_length=100, verbose_name=_("Udstyrsnavn"))
+    Beskrivelse = models.TextField(blank=True, verbose_name=_("Beskrivelse"))
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -23,7 +23,7 @@ class Equipment(models.Model):
     )
 
     def __str__(self):
-        return self.Navn  # Ændret fra 'name' til 'Navn'
+        return self.Navn
 
     class Meta:
         verbose_name_plural = _("Udstyr")
@@ -88,13 +88,6 @@ class FaultReport(models.Model):
         choices=STATUS_CHOICES,
         default='Active',
         verbose_name=_("Status")
-    )
-    qr_code = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        default="",
-        verbose_name=_("QR-kode")
     )
     image = models.ImageField(
         upload_to='fault_reports/',
@@ -175,6 +168,14 @@ class FaultReport(models.Model):
         blank=True,
         null=True,
         verbose_name=_("Mekanikerrapport")
+    )
+
+    # NYT FELT: Forventet værkstedsdato
+    expected_workshop_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Forventet indkaldelse til værksted"),
+        help_text=_("Dato og tid for når aktivet forventes indkaldt til værksted.")
     )
 
     def __str__(self):
